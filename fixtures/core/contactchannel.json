@@ -1,0 +1,24 @@
+[
+  {
+    "model": "core.contactchannel",
+    "pk": 1,
+    "fields": {
+      "kind": "phone",
+      "value": "+7 700 000 00 00",
+      "label_kk": "Қолдау",
+      "label_ru": "Поддержка",
+      "order": 1
+    }
+  },
+  {
+    "model": "core.contactchannel",
+    "pk": 2,
+    "fields": {
+      "kind": "email",
+      "value": "support@example.kz",
+      "label_kk": "Эл. пошта",
+      "label_ru": "Эл. почта",
+      "order": 2
+    }
+  }
+]

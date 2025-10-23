@@ -1,0 +1,20 @@
+[
+  {
+    "model": "core.bloodcenter",
+    "pk": 1,
+    "fields": {
+      "name_kk": "Алматы қ. Қан орталығы",
+      "name_ru": "Центр крови г. Алматы",
+      "city": "Almaty",
+      "address": "ул. Абая, 100",
+      "phone": "+7 727 000 00 00",
+      "hours_kk": "Дс-Жм 09:00-18:00",
+      "hours_ru": "Пн-Пт 09:00-18:00",
+      "geo_lat": null,
+      "geo_lon": null,
+      "is_active": true,
+      "created_at": "2025-10-12T00:00:00Z",
+      "updated_at": "2025-10-12T00:00:00Z"
+    }
+  }
+]
