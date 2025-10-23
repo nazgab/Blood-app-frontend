@@ -1,0 +1,50 @@
+[
+  {
+    "model": "core.menuitem",
+    "pk": 1,
+    "fields": {
+      "key": "home",
+      "title_kk": "Басты бет",
+      "title_ru": "Главная",
+      "href": "/",
+      "order": 0,
+      "visible": true
+    }
+  },
+  {
+    "model": "core.menuitem",
+    "pk": 2,
+    "fields": {
+      "key": "news",
+      "title_kk": "Жаңалықтар",
+      "title_ru": "Новости",
+      "href": "/news",
+      "order": 1,
+      "visible": true
+    }
+  },
+  {
+    "model": "core.menuitem",
+    "pk": 3,
+    "fields": {
+      "key": "centers",
+      "title_kk": "Орталықтар",
+      "title_ru": "Центры",
+      "href": "/centers",
+      "order": 2,
+      "visible": true
+    }
+  },
+  {
+    "model": "core.menuitem",
+    "pk": 4,
+    "fields": {
+      "key": "contact",
+      "title_kk": "Байланыс",
+      "title_ru": "Контакты",
+      "href": "/contacts",
+      "order": 3,
+      "visible": true
+    }
+  }
+]

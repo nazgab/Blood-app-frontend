@@ -1,0 +1,141 @@
+from django.db import models
+from django.contrib.auth import get_user_model
+
+LANG_CHOICES = (("kk", "Kazakh"), ("ru", "Russian"))
+
+
+class Timestamped(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class SiteConfig(Timestamped):
+    logo = models.ImageField(upload_to="logos/", blank=True, null=True)
+    app_link_android = models.URLField(blank=True)
+    app_link_ios = models.URLField(blank=True)
+    footer_text_kk = models.TextField(blank=True, default="")
+    footer_text_ru = models.TextField(blank=True, default="")
+    footer_text_en = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return f"SiteConfig #{self.id}"
+
+
+class MenuItem(models.Model):
+    key = models.SlugField(unique=True)
+    title_kk = models.CharField(max_length=100)
+    title_ru = models.CharField(max_length=100)
+    # 🔽 новое поле
+    title_en = models.CharField(max_length=100, blank=True, default="")
+
+    href = models.CharField(max_length=200, help_text="Path or URL")
+    order = models.PositiveIntegerField(default=0)
+    visible = models.BooleanField(default=True)
+
+    def __str__(self):
+        # покажем что-то осмысленное
+        return self.title_ru or self.title_kk or self.title_en
+
+    class Meta:
+        ordering = ["order", "id"]
+
+
+class HeroBlock(models.Model):
+    # ...
+    title_kk = models.CharField(max_length=200)
+    title_ru = models.CharField(max_length=200)
+    title_en = models.CharField(max_length=200, blank=True, default="")  # 🔽
+
+    subtitle_kk = models.CharField(max_length=300, blank=True, default="")
+    subtitle_ru = models.CharField(max_length=300, blank=True, default="")
+    subtitle_en = models.CharField(max_length=300, blank=True, default="")  # 🔽
+
+    cta_text_kk = models.CharField(max_length=100, blank=True, default="")
+    cta_text_ru = models.CharField(max_length=100, blank=True, default="")
+    cta_text_en = models.CharField(max_length=100, blank=True, default="")  # 🔽
+
+    cta_url = models.CharField(max_length=200, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Article(Timestamped):
+    CATEGORY_CHOICES = (
+        ("advice", "Медициналық кеңестер / Медицинские советы"),
+        ("event", "Акциялар / Акции"),
+        ("news", "Жаңалықтар / Новости"),
+    )
+    title_kk = models.CharField(max_length=200)
+    title_ru = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    excerpt_kk = models.CharField(max_length=300, blank=True, default="")
+    excerpt_ru = models.CharField(max_length=300, blank=True, default="")
+    body_kk = models.TextField()
+    body_ru = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="news")
+    cover = models.ImageField(upload_to="articles/", blank=True, null=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title_ru or self.title_kk
+
+    class Meta:
+        ordering = ["-published_at", "-id"]
+
+
+class BloodCenter(Timestamped):
+    name_kk = models.CharField(max_length=200)
+    name_ru = models.CharField(max_length=200)
+    city = models.CharField(max_length=100)
+    address = models.CharField(max_length=250)
+    phone = models.CharField(max_length=50, blank=True, default="")
+    hours_kk = models.CharField(max_length=120, blank=True, default="")
+    hours_ru = models.CharField(max_length=120, blank=True, default="")
+    geo_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    geo_lon = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name_ru or self.name_kk
+
+
+class ContactChannel(models.Model):
+    kind = models.CharField(
+        max_length=30, help_text="phone, email, whatsapp, telegram..."
+    )
+    value = models.CharField(max_length=120)
+    label_kk = models.CharField(max_length=120, blank=True, default="")
+    label_ru = models.CharField(max_length=120, blank=True, default="")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.kind}: {self.value}"
+
+
+User = get_user_model()
+
+
+class BonusAccount(Timestamped):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="bonus_account"
+    )
+    balance = models.IntegerField(default=0)
+    level = models.CharField(max_length=30, default="Basic")
+
+    def __str__(self):
+        return f"{self.user_id} -> {self.balance}"
+
+class AboutSection(models.Model):
+    text_kk = models.TextField(verbose_name="О нас (Казахский)")
+    text_ru = models.TextField(verbose_name="О нас (Русский)")
+    text_en = models.TextField(verbose_name="О нас (Английский)")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"О нас (обновлено {self.updated_at:%Y-%m-%d})"

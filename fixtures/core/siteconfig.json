@@ -1,0 +1,14 @@
+[
+  {
+    "model": "core.siteconfig",
+    "pk": 1,
+    "fields": {
+      "app_link_android": "https://play.google.com/store/apps/details?id=example",
+      "app_link_ios": "https://apps.apple.com/app/id000000",
+      "footer_text_kk": "© 2025 BloodSeeker. Барлық құқықтар қорғалған.",
+      "footer_text_ru": "© 2025 BloodSeeker. Все права защищены.",
+      "created_at": "2025-10-12T00:00:00Z",
+      "updated_at": "2025-10-12T00:00:00Z"
+    }
+  }
+]

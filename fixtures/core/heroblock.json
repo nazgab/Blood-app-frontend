@@ -1,0 +1,19 @@
+[
+  {
+    "model": "core.heroblock",
+    "pk": 1,
+    "fields": {
+      "title_kk": "Қан тапсырып, өмір сыйлаңыз!",
+      "title_ru": "Сдайте кровь — подарите жизнь!",
+      "title_en": "Donate blood — save a life!",
+      "subtitle_kk": "Тіркеліңіз және жақын орталықты табыңыз.",
+      "subtitle_ru": "Зарегистрируйтесь и найдите ближайший центр",
+      "subtitle_en": "Register and find the nearest center",
+      "cta_text_kk": "Донор болу",
+      "cta_text_ru": "Стать донором",
+      "cta_text_en": "Become a donor",
+      "cta_url": "/register",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  }
+]

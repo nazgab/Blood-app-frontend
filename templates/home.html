@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BloodSeeker — Главная</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+</head>
+<body>
+
+  <!-- Боковая колонка с логотипом и «бургером» -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="/">
+        <img id="logo" alt="logo">
+      </a>
+      <button class="burger" aria-label="menu" type="button">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Попап меню (бургер) и подложка -->
+  <div id="menuPopover" class="menu-popover hidden"></div>
+  <div id="menuBackdrop" class="menu-backdrop hidden"></div>
+
+  <!-- Контентная область -->
+  <div class="page">
+
+    <!-- Верхняя панель -->
+    <header class="topbar">
+      <div class="welcome" id="welcomeText">Добро пожаловать, <span id="userName">User</span></div>
+
+      <div class="topbar-right">
+        <nav class="langs">
+          <button data-lang="kk" class="lang-link">KK</button>
+          <span class="sep">|</span>
+          <button data-lang="ru" class="lang-link active">RU</button>
+          <span class="sep">|</span>
+          <button data-lang="en" class="lang-link">EN</button>
+        </nav>
+
+        <!-- Триггер профиля (по клику открывается профильное меню) -->
+        <button class="user" type="button" aria-label="Профиль">
+          <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+          <span class="user-name" id="userNameRight">hyuoka</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Профильное выпадающее меню -->
+    <div id="profilePopover" class="profile-popover hidden"></div>
+    <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+
+    <main class="content">
+      <!-- Блок 1: Герой-баннер -->
+      <section class="hero-card">
+        <div class="hero-text">
+          <h1 id="heroTitle">Сдайте кровь - подарите жизнь!</h1>
+        <p id="heroSub">Зарегистрируйтесь и найдите ближайший центр</p>
+        </div>
+        <div class="hero-ill" aria-hidden="true">
+          <img src="{% static 'blood_pj.png' %}" alt="">
+        </div>
+      </section>
+
+      <!-- Блок 2: Промо-приложение -->
+      <section class="promo-card">
+        <div class="promo-text">
+          <h2 id="promoTitle">BloodSeeker в твоем мобильном телефоне</h2>
+          <p id="promoSub">Скачай приложение для более удобного просмотра</p>
+        </div>
+        <div class="promo-ill" aria-hidden="true">
+          <img src="{% static 'phone.png' %}" alt="">
+        </div>
+      </section>
+      <!-- Блок "О нас" -->
+      <section id="aboutSection" class="about">
+        <div class="about-wrap container">
+          <div class="about-illus">
+            <img src="/static/about_us.png" alt="BloodSeeker" />
+          </div>
+
+          <div class="about-content">
+            <h2 id="aboutTitle">О нас</h2>
+          
+            <div id="aboutText" class="about-prose"></div>
+          </div>
+        </div>
+      </section>
+
+
+ 
+    </main>
+
+    <!-- Низ страницы -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-cards">
+          <div class="footer-card">
+            <div class="footer-title" id="contactTitle">Контакты</div>
+            <div class="footer-sub" id="contactPhone"></div>
+          </div>
+
+          <div class="footer-card">
+            <div class="footer-title" id="emailTitle">Email</div>
+            <div class="footer-sub" id="contactEmail"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="copyright" id="footerText">© 2025 BloodSeeker. Все права защищены.</div>
+    </footer>
+
+
+  </div>
+
+  <!-- Обязательно defer, чтобы скрипт выполнился после разметки -->
+  <script defer src="{% static 'home.js' %}"></script>
+</body>
+</html>
