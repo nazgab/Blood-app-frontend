@@ -1,0 +1,111 @@
+{% load static %}
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>BloodSeeker — Mobile</title>
+  <link rel="stylesheet" href="{% static 'mobile_home.css' %}">
+</head>
+<body>
+  <!-- ЛЕВАЯ РЕЙКА (как в макете) -->
+  <aside class="rail">
+    <button class="logo-btn" id="logoBtn" aria-label="Home">
+      <img id="logoImg" alt="BloodSeeker">
+    </button>
+    <button class="rail-burger" id="burgerBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </aside>
+
+  <!-- ВЕРХ (языки + аватар справа) -->
+  <header class="topbar">
+    <div class="langs" id="langBar">
+        <button class="lang-link" data-lang="kk">KK</button>
+        <span class="sep">|</span>
+        <button class="lang-link" data-lang="ru">RU</button>
+        <span class="sep">|</span>
+        <button class="lang-link" data-lang="en">EN</button>
+    </div>
+
+
+    <button class="avatar-btn" id="profileBtn" aria-label="Profile">
+      <img id="avatarImg" alt="User">
+    </button>
+
+    <!-- выпадающая карточка профиля -->
+    <div class="profile-card" id="profileCard" hidden>
+      <div class="profile-row">
+        <img class="avatar" id="pAvatar" alt="User">
+        <div class="ptext">
+          <strong id="pName">User</strong>
+          <span id="pEmail">user@example.kz</span>
+        </div>
+      </div>
+      <a class="p-link" href="/account/">Личный кабинет</a>
+      <button class="p-logout" id="logoutBtn">Выйти</button>
+    </div>
+  </header>
+
+  <!-- ВЫПАДАЮЩЕЕ МЕНЮ (бургер) -->
+  <div class="overlay" id="overlay" hidden></div>
+  <nav class="fly-menu" id="flyMenu" hidden>
+    <a href="/donate/">Сдача крови</a>
+    <a href="/bonuses/">Бонусы</a>
+    <a href="/history/">История</a>
+  </nav>
+
+  <!-- КОНТЕНТ (1-в-1 по смыслу с десктопом) -->
+  <main class="page">
+    <p class="hello" id="helloText">Қош келдіңіз, User</p>
+
+    <!-- Розовая карточка (hero soft) -->
+    <section class="card hero soft" id="heroSoft">
+      <div class="hero-text">
+        <h1 id="heroTitle">Қан тапсырып, өмір сыйлаңыз!</h1>
+        <p id="heroSub">Тіркеліңіз және жақын орталықты табыңыз.</p>
+      </div>
+      <div class="hero-ill">
+        <img id="heroImg" alt="">
+      </div>
+    </section>
+
+    <!-- Градиентная карточка (промо) -->
+    <section class="card hero grad" id="promoCard">
+      <div class="hero-text">
+        <h2 id="promoTitle">BloodSeeker сіздің мобильді телефоныңызда</h2>
+        <p id="promoSub">Қолданбаны жүктеп алып, ыңғайлы қараңыз</p>
+      </div>
+      <div class="hero-ill">
+        <img id="promoImg" alt="">
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="about card" id="about">
+      <h3 id="aboutTitle">Біз туралы</h3>
+      <div class="prose" id="aboutText"><!-- из API, safe --></div>
+      <div class="about-ill">
+        <img id="aboutImg" alt="">
+      </div>
+    </section>
+
+    <!-- Нижние «пилюли» -->
+    <div class="sticky-gap"></div>
+  </main>
+
+  <!-- STICKY панель контактов -->
+  <footer class="sticky">
+    <a class="pill" id="supportTel" href="tel:+77000000000">
+      <div class="pill-title" id="supportTitle">Қолдау</div>
+      <div class="pill-sub" id="supportPhone">+7 700 000 00 00</div>
+    </a>
+    <a class="pill" id="supportMail" href="mailto:support@example.kz">
+      <div class="pill-title" id="emailTitle">Эл. пошта</div>
+      <div class="pill-sub" id="emailValue">support@example.kz</div>
+    </a>
+  </footer>
+
+  <script defer src="{% static 'mobile_home.js' %}"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from . import legacy_views as lviews
 from .views import AboutSectionView
+from .views_mobile import mobile_home
 
 urlpatterns = [
     # 🩺 Health check
@@ -31,4 +32,6 @@ urlpatterns = [
     path("legacy/users/<int:user_id>/bonus/", lviews.BonusByUserView.as_view(), name="legacy-user-bonus"),
 
     path('about/', AboutSectionView.as_view(), name='about-section'),
+
+    path("m/", mobile_home, name="mobile_home"),
 ]
