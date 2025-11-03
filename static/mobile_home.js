@@ -8,7 +8,8 @@ const API = {
   contacts:'/api/v1/contacts/',
   about:  '/api/v1/about/',
 };
-
+API.menu = '/api/v1/site/menu/';
+let menuCache = [];
 const LS_LANG = 'bs_lang';
 const getLang = ()=> localStorage.getItem(LS_LANG) || 'kk';
 const setLang = l => localStorage.setItem(LS_LANG, l);
@@ -18,22 +19,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Язык по умолчанию
   if (!localStorage.getItem(LS_LANG)) setLang('kk');
   highlightLang();
-
-  // Слушатели языка
-  document.querySelectorAll('.lang-link').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      setLang(btn.dataset.lang);
-      highlightLang();
-      loadAll(); // перерисовать тексты
-    });
-  });
-
+  setProfileTexts(); 
+  
   // UI: бургер и профиль
   wireMenus();
 
   // загрузка данных
   await loadAll();
 });
+
+// вызови рендер при смене языка (после highlightLang())
+document.querySelectorAll('.lang-link').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    setLang(btn.dataset.lang);
+    highlightLang();
+    setProfileTexts(); 
+    renderMenu();       // <— перерисовать подписи
+    loadAll();          // остальное
+  });
+});
+
+// === i18n для профиля ===
+const I18N = {
+  account: { kk: 'Жеке кабинет', ru: 'Личный кабинет', en: 'Account' },
+  logout:  { kk: 'Шығу',         ru: 'Выйти',          en: 'Logout'  },
+};
+
+function setProfileTexts(){
+  const lang = getLang();
+  const $acc = byId('accountLink');
+  const $out = byId('logoutBtn');
+  if ($acc) $acc.textContent = I18N.account[lang] || I18N.account.ru;
+  if ($out) $out.textContent = I18N.logout[lang]  || I18N.logout.ru;
+}
+
 
 // ====== меню и профиль ======
 function wireMenus(){
@@ -55,10 +74,11 @@ function wireMenus(){
   overlay?.addEventListener('click', ()=> oShow(false));
 
   profBtn?.addEventListener('click', ()=>{
-    // закрыть меню
     oShow(false);
+    setProfileTexts();        // <— добавь
     profCard.hidden = !profCard.hidden;
   });
+
 
   // logout
   byId('logoutBtn')?.addEventListener('click', ()=>{
@@ -81,7 +101,9 @@ async function loadAll(){
     loadConfig(),
     loadHero(),
     loadContacts(),
-    loadAbout()
+    loadAbout(),
+    loadMenu() ,
+    loadFooterText(),
   ]).catch(console.error);
 }
 
@@ -141,12 +163,99 @@ async function loadContacts(){
 }
 
 async function loadAbout(){
-  const r = await fetch(API.about);
-  const d = await r.json();
-  const lang = getLang();
-  byId('aboutTitle').textContent = d[`title_${lang}`] || d.title_ru || '';
-  const html = d[`text_${lang}`] || '';
-  // безопасно вставляем (бэкенд даёт проверенный html)
-  byId('aboutText').innerHTML = html;
-  if (d.image) byId('aboutImg').src = d.image;
+  try {
+    const r = await fetch(API.about);
+    const d = await r.json();
+    const lang = getLang();
+
+    // Заголовок (локальный перевод)
+    const titleMap = { kk: 'Біз туралы', ru: 'О нас', en: 'About us' };
+    const titleEl = byId('aboutTitle');
+    if (titleEl) titleEl.textContent = titleMap[lang] ?? titleMap.ru;
+
+    // Текст из API (у тебя HTML доверенный)
+    const html = d[`text_${lang}`] || '';
+    const textEl = byId('aboutText');
+    if (textEl) textEl.innerHTML = html;
+
+    // Картинка: сначала пытаемся взять из API, иначе — локальный fallback
+    const imgEl = byId('aboutImg');
+    if (imgEl) {
+      const apiImg = (d.image || '').trim();
+
+      // ставим src (API или локальный)
+      imgEl.src = apiImg !== '' ? apiImg : '/static/about_us.png';
+
+      // если ссылка из API битая — откат на локальный файл
+      imgEl.onerror = () => { imgEl.src = '/static/about_us.png'; };
+      imgEl.alt = titleMap[lang] ?? 'About';
+      imgEl.removeAttribute('hidden'); // на случай если где-то скрыли
+      imgEl.style.display = 'block';   // защитный ход
+    }
+  } catch (e) {
+    console.error('loadAbout error:', e);
+    // При ошибке сети тоже показываем локальную
+    const imgEl = byId('aboutImg');
+    if (imgEl) {
+      imgEl.src = '/static/about_us.png';
+      imgEl.onerror = null;
+    }
+  }
 }
+
+// загрузка меню из бекенда
+async function loadMenu(){
+  try{
+    const r = await fetch(API.menu);
+    if(!r.ok) throw new Error('menu fetch failed');
+    menuCache = await r.json(); // массив: [{key, title_kk, title_ru, title_en, href, ...}, ...]
+    renderMenu();
+  }catch(e){
+    console.error(e);
+    // запасной вариант (если API недоступно)
+    menuCache = [
+      { key:'donate',  title_ru:'Сдача крови', title_kk:'Қан тапсыру', title_en:'Donate',  href:'/donate/' },
+      { key:'bonuses', title_ru:'Бонусы',      title_kk:'Бонустар',    title_en:'Bonuses', href:'/bonuses/' },
+      { key:'history', title_ru:'История',     title_kk:'Тарих',       title_en:'History', href:'/history/' },
+    ];
+    renderMenu();
+  }
+}
+
+// рендер меню с учётом языка и visible
+function renderMenu(){
+  const box  = byId('flyMenu');
+  if(!box) return;
+  const lang = getLang();
+
+  // очистить
+  box.innerHTML = '';
+
+  (menuCache || [])
+    .filter(item => item.visible !== false)  // visible==True либо поле отсутствует
+    .sort((a,b)=> (a.order??0) - (b.order??0))
+    .forEach(item=>{
+      const title = item[`title_${lang}`] || item.title_ru || item.title_kk || item.title_en || item.key;
+      const a = document.createElement('a');
+      a.href = item.href || '#';
+      a.textContent = title;
+      box.appendChild(a);
+    });
+}
+
+// 2) функция подстановки текста из SiteConfig
+async function loadFooterText(){
+  try{
+    const r = await fetch(API.config);
+    const x = await r.json();
+    const lang = getLang();
+    const text = x[`footer_text_${lang}`] || x.footer_text_ru || '';
+    // если в админке храните просто текст — используем textContent
+    // если хотите поддержать простой HTML, замените на innerHTML
+    const el = byId('footerCopyright');
+    if (el) el.textContent = text;
+  }catch(e){
+    console.error(e);
+  }
+}
+

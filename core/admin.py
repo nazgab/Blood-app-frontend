@@ -284,13 +284,17 @@ class LegacyUserAdmin(ExportMixin, admin.ModelAdmin):
     export_legacy_users_csv.short_description = "Экспорт (CSV)"
 
     # --- экспорт Excel ---
+    # --- экспорт Excel ---
     def export_legacy_users_excel(self, request, queryset):
         dataset = LegacyUserResource().export(queryset)
-        response = HttpResponse(
-            dataset.xlsx,
+        # БЫЛО: dataset.xlsx  -> AttributeError
+        data = dataset.export('xlsx')  # bytes
+
+        return HttpResponse(
+            data,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": 'attachment; filename="donors_legacy.xlsx"'},
         )
-        response["Content-Disposition"] = 'attachment; filename="donors_legacy.xlsx"'
-        return response
 
     export_legacy_users_excel.short_description = "Экспорт (Excel)"
+

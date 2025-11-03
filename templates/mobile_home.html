@@ -5,6 +5,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>BloodSeeker — Mobile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
+  {% load static %}
   <link rel="stylesheet" href="{% static 'mobile_home.css' %}">
 </head>
 <body>
@@ -29,8 +31,9 @@
     </div>
 
 
-    <button class="avatar-btn" id="profileBtn" aria-label="Profile">
-      <img id="avatarImg" alt="User">
+    <button id="profileBtn" class="user">
+      <img id="avatarImg" class="avatar" alt="user">
+      <span id="pNameTop">User</span>
     </button>
 
     <!-- выпадающая карточка профиля -->
@@ -42,7 +45,7 @@
           <span id="pEmail">user@example.kz</span>
         </div>
       </div>
-      <a class="p-link" href="/account/">Личный кабинет</a>
+      <a class="p-link" id="accountLink" href="/account/">Личный кабинет</a>
       <button class="p-logout" id="logoutBtn">Выйти</button>
     </div>
   </header>
@@ -66,7 +69,7 @@
         <p id="heroSub">Тіркеліңіз және жақын орталықты табыңыз.</p>
       </div>
       <div class="hero-ill">
-        <img id="heroImg" alt="">
+        <img id="heroImg" src="{% static 'blood_pj.png' %}" alt="Blood donation">
       </div>
     </section>
 
@@ -77,17 +80,18 @@
         <p id="promoSub">Қолданбаны жүктеп алып, ыңғайлы қараңыз</p>
       </div>
       <div class="hero-ill">
-        <img id="promoImg" alt="">
+        <img id="promoImg" src="{% static 'phone.png' %}" alt="App preview">
       </div>
     </section>
 
     <!-- About -->
     <section class="about card" id="about">
+      <div class="about-ill">
+        <img id="aboutImg" src="{% static 'about_us.png' %}" alt="About BloodSeeker">
+      </div>
+
       <h3 id="aboutTitle">Біз туралы</h3>
       <div class="prose" id="aboutText"><!-- из API, safe --></div>
-      <div class="about-ill">
-        <img id="aboutImg" alt="">
-      </div>
     </section>
 
     <!-- Нижние «пилюли» -->
@@ -95,16 +99,19 @@
   </main>
 
   <!-- STICKY панель контактов -->
-  <footer class="sticky">
-    <a class="pill" id="supportTel" href="tel:+77000000000">
-      <div class="pill-title" id="supportTitle">Қолдау</div>
-      <div class="pill-sub" id="supportPhone">+7 700 000 00 00</div>
-    </a>
-    <a class="pill" id="supportMail" href="mailto:support@example.kz">
-      <div class="pill-title" id="emailTitle">Эл. пошта</div>
-      <div class="pill-sub" id="emailValue">support@example.kz</div>
-    </a>
-  </footer>
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-pill">
+        <div id="supportTitle" class="footer-title">Қолдау</div>
+        <div id="supportPhone" class="footer-text">+7 700 000 00 00</div>
+      </div>
+      <div class="footer-pill">
+        <div id="emailTitle" class="footer-title">Эл. пошта</div>
+        <div id="emailValue" class="footer-text">support@example.kz</div>
+      </div>
+    </div>
+  <div id="footerCopyright" class="footer-copy">© 2025 BloodSeeker. Барлық құқықтар қорғалған.</div>
+</footer>
 
   <script defer src="{% static 'mobile_home.js' %}"></script>
 </body>
