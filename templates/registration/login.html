@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login — BloodSeeker{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth2">
+  <header class="auth2-head">
+    <a class="brand-logo" href="/">
+      <img id="brandLogo" alt="BloodSeeker">
+    </a>
+  </header>
+
+  <div class="auth2-body">
+    <!-- left illustration -->
+    <div class="auth2-illus">
+      <img src="{% static 'превью.png' %}" alt="">
+    </div>
+
+    <!-- right form card -->
+    <div class="auth2-card">
+      <h1 class="auth2-title">Login here</h1>
+      <div class="auth2-sub">Together we save lives</div>
+
+      {% if form.non_field_errors %}
+        <div class="auth2-alert">
+          {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate class="auth2-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next|default:'/home/' }}"/>
+
+        <label class="auth2-label" for="id_username">Email</label>
+        <input class="auth2-input" type="email" name="username" id="id_username"
+               placeholder="you@example.com" autofocus required
+               value="{{ form.username.value|default:'' }}">
+        {% for e in form.username.errors %}<div class="auth2-error">{{ e }}</div>{% endfor %}
+
+        <label class="auth2-label" for="id_password">Password</label>
+        <div class="auth2-pass">
+          <input class="auth2-input" type="password" name="password" id="id_password" required>
+          <button class="auth2-eye" type="button" data-toggle-pass>👁</button>
+        </div>
+        {% for e in form.password.errors %}<div class="auth2-error">{{ e }}</div>{% endfor %}
+
+        <div class="auth2-row">
+          <a class="auth2-link" href="{% url 'password_reset' %}">Forgot your password?</a>
+        </div>
+
+        <button class="auth2-btn" type="submit">Sign in</button>
+
+        <div class="auth2-foot">
+          <a class="auth2-link" href="{% url 'signup' %}">Create new account</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script defer src="{% static 'auth.js' %}"></script>
+{% endblock %}

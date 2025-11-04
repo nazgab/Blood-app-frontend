@@ -31,7 +31,13 @@
 
     <!-- Верхняя панель -->
     <header class="topbar">
-      <div class="welcome" id="welcomeText">Добро пожаловать, <span id="userName">User</span></div>
+      <div class="welcome" id="welcomeText">
+        {% if user.is_authenticated %}
+          Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+        {% else %}
+          Қош келдіңіз! <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
+      </div>
 
       <div class="topbar-right">
         <div class="langs" id="langBar">
@@ -42,17 +48,38 @@
           <button class="lang-link" data-lang="en">EN</button>
         </div>
 
-        <!-- Триггер профиля (по клику открывается профильное меню) -->
-        <button class="user" type="button" aria-label="Профиль">
-          <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
-          <span class="user-name" id="userNameRight">hyuoka</span>
-        </button>
+        {% if user.is_authenticated %}
+          <!-- Профиль и меню -->
+          <button class="user" type="button" aria-label="Профиль" id="profileBtn">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+            <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
+          </button>
+        {% else %}
+          <!-- Если вдруг снимешь login_required с /home/ -->
+          <a class="btn" href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
       </div>
     </header>
 
-    <!-- Профильное выпадающее меню -->
-    <div id="profilePopover" class="profile-popover hidden"></div>
-    <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+    {% if user.is_authenticated %}
+      <div id="profilePopover" class="profile-popover hidden">
+        <div class="profile-card">
+          <div class="profile-row">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="">
+            <div>
+              <div class="name">{{ user.get_full_name|default:user.username }}</div>
+              <div class="muted">{{ user.email }}</div>
+            </div>
+          </div>
+          <hr>
+          <nav class="profile-menu">
+            <a href="#" class="profile-link">Жеке кабинет</a>
+            <a href="{% url 'logout' %}?next=/" class="profile-link danger">Шығу</a>
+          </nav>
+        </div>
+      </div>
+      <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+    {% endif %}
 
     <main class="content">
       <!-- Блок 1: Герой-баннер -->
@@ -80,7 +107,7 @@
       <section id="aboutSection" class="about">
         <div class="about-wrap container">
           <div class="about-illus">
-            <img src="/static/about_us.png" alt="BloodSeeker" />
+            <img src="{% static 'about_us.png' %}" alt="BloodSeeker" />
           </div>
 
           <div class="about-content">

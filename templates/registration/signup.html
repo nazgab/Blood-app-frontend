@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Account — BloodSeeker{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth2">
+  <header class="auth2-head">
+    <a class="brand-logo" href="/"><img id="brandLogo" alt="BloodSeeker"></a>
+  </header>
+
+  <div class="auth2-body">
+    <div class="auth2-illus">
+      <img src="{% static 'превью.png' %}" alt="">
+    </div>
+
+    <div class="auth2-card">
+      <h1 class="auth2-title">Create Account</h1>
+
+      {% if form.non_field_errors %}
+        <div class="auth2-alert">
+          {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate class="auth2-form">
+        {% csrf_token %}
+
+        <label class="auth2-label" for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% for e in form.email.errors %}<div class="auth2-error">{{ e }}</div>{% endfor %}
+
+        <label class="auth2-label" for="{{ form.password1.id_for_label }}">Password</label>
+        <div class="auth2-pass">
+          {{ form.password1 }}
+          <button class="auth2-eye" type="button" data-toggle-pass>👁</button>
+        </div>
+        {% for e in form.password1.errors %}<div class="auth2-error">{{ e }}</div>{% endfor %}
+
+        <label class="auth2-label" for="{{ form.password2.id_for_label }}">Confirm Password</label>
+        {{ form.password2 }}
+        {% for e in form.password2.errors %}<div class="auth2-error">{{ e }}</div>{% endfor %}
+
+        <button class="auth2-btn" type="submit">Sign up</button>
+
+        <div class="auth2-foot">
+          <span>Already have an account?</span>
+          <a class="auth2-link" href="{% url 'login' %}?next=/home/">Sign in</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script defer src="{% static 'auth.js' %}"></script>
+{% endblock %}

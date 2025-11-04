@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Жеке кабинет — BloodSeeker{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:24px auto;">
+
+  <h2 style="margin:0 0 16px 0;">Жеке кабинет / Личный кабинет</h2>
+
+  {% if mode == "legacy" and legacy %}
+    <!-- READ-ONLY для пользователей из legacy.users -->
+    <div class="card" style="padding:16px;border:1px solid #eee;border-radius:12px;margin-bottom:16px;">
+      <h3 style="margin:0 0 12px 0;">{{ legacy.last_name }} {{ legacy.first_name }}</h3>
+      <div><b>Email:</b> {{ legacy.email }}</div>
+      <div><b>Телефон:</b> {{ legacy.phone|default:"—" }}</div>
+      <div><b>Қан тобы / Группа крови:</b> {{ legacy.blood_group|default:"—" }}</div>
+      <div><b>ИИН:</b> {{ legacy.iin|default:"—" }}</div>
+      <div><b>Жасы / Возраст:</b> {{ legacy.age|default:"—" }}</div>
+      <div><b>Салмақ / Вес:</b> {{ legacy.weight|default:"—" }}</div>
+      <div><b>Қала / Город:</b> {{ legacy.city|default:"—" }}</div>
+      <div><b>Мекенжай / Адрес:</b> {{ legacy.address|default:"—" }}</div>
+      <div><b>Тіркелген күні / Дата создания:</b> {{ legacy.created_at|date:"Y-m-d H:i" }}</div>
+    </div>
+
+    <div style="font-size:14px;color:#6b7280">
+      Бұл профиль legacy базасынан оқылады (тек қарау үшін) • Этот профиль загружается из legacy-базы (только чтение).
+    </div>
+
+  {% elif mode == "profile" and form %}
+    <!-- Редактирование нашего Profile -->
+    <form method="post" class="card" style="padding:16px;border:1px solid #eee;border-radius:12px;">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label>Аты / Имя</label>
+          {{ form.first_name }}
+        </div>
+        <div>
+          <label>Тегі / Фамилия</label>
+          {{ form.last_name }}
+        </div>
+        <div>
+          <label>Қан тобы / Группа крови</label>
+          {{ form.blood_group }}
+        </div>
+        <div>
+          <label>ИИН</label>
+          {{ form.iin }}
+        </div>
+        <div>
+          <label>Жасы / Возраст</label>
+          {{ form.age }}
+        </div>
+        <div>
+          <label>Салмақ / Вес</label>
+          {{ form.weight }}
+        </div>
+        <div>
+          <label>Қала / Город</label>
+          {{ form.city }}
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Мекенжай / Адрес</label>
+          {{ form.address }}
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Телефон</label>
+          {{ form.phone }}
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="submit">Сақтау / Сохранить</button>
+      </div>
+    </form>
+
+  {% else %}
+    <div class="card" style="padding:16px;border:1px solid #eee;border-radius:12px;">
+      Профиль не найден.
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

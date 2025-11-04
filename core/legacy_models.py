@@ -14,7 +14,7 @@ class LegacyUser(models.Model):
     address = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=100, unique=True)
-    password_hash = models.CharField(max_length=255)  # ⚠️ это НЕ Django-хэш
+    password_hash = models.CharField(max_length=255)  
     created_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
