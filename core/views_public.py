@@ -1,5 +1,8 @@
-from django.shortcuts import render  # без redirect для теста
+from core.models import SiteConfig
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 
 def index(request):
-    # ВРЕМЕННО: всегда просто рендерим публичную страницу
-    return render(request, 'landing.html')
+    cfg = SiteConfig.objects.first()
+    return render(request, "landing.html", {"site_config": cfg})
+

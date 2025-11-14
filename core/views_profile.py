@@ -4,8 +4,10 @@ from django.shortcuts import render, redirect
 from .forms import ProfileForm
 from .legacy_models import LegacyUser
 from .models import Profile
+from django.views.decorators.cache import never_cache
 
 @login_required
+@never_cache
 def profile_view(request):
     email = (request.user.email or request.user.username).strip()
 

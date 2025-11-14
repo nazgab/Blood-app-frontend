@@ -9,8 +9,13 @@
 {% block content %}
 <div class="auth2">
   <header class="auth2-head">
-    <a class="brand-logo" href="/">
-      <img id="brandLogo" alt="BloodSeeker">
+    <a class="brand-logo" href="{% url 'index' %}">
+      {% if site_config and site_config.logo %}
+        <img id="brandLogo" src="{{ site_config.logo.url }}" alt="{{ site_config.site_name|default:'BloodSeeker' }}">
+      {% else %}
+        <!-- fallback: либо статический логотип -->
+        <img id="brandLogo" src="{% static 'img/logo-fallback.png' %}" alt="BloodSeeker">
+      {% endif %}
     </a>
   </header>
 

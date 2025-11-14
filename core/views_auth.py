@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from .forms import SignupForm
-from django.contrib.auth import logout
-
+from django.contrib.auth import logout as django_logout
+from django.views.decorators.cache import never_cache
 
 def signup(request):
     # Если уже залогинен — мягко перекидываем в кабинет
@@ -31,7 +31,15 @@ def signup(request):
 
     return render(request, "registration/signup.html", {"form": form})
 
+@never_cache
 def logout_then_redirect(request):
-    logout(request)  # очистит сессию
-    next_url = request.GET.get("next") or "/"
-    return redirect(next_url)
+    """
+    Корректный выход: очищаем сессию и редиректим на публичную страницу.
+    never_cache -> подсказывает браузеру/прокси не кэшировать ответ.
+    При наличии параметра ?next=... — редиректим туда, иначе на 'index'.
+    """
+    django_logout(request)  # очистит сессию и cookies сессии
+    next_url = request.GET.get("next")
+    if next_url:
+        return redirect(next_url)
+    return redirect("index")
