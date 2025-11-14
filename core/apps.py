@@ -9,6 +9,7 @@ class CoreConfig(AppConfig):
         from django.contrib.auth import get_user_model
         from django.db.models.signals import post_save
         from .models import BonusAccount
+        import core.signals  # noqa: F401
 
         User = get_user_model()
 

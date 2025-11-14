@@ -1,22 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}BloodSite — Қош келдіңіз!{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'home.css' %}">
+{# при необходимости добавь auth.css или другие стили, если используются на home #}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+{# --- полностью копируем каркас из home.html (sidebar, popovers, header, footer) --- #}
 <!doctype html>
-<html lang="ru">
+<html lang="kk">
 <head>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BloodSeeker — Главная</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'home.css' %}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-
   <!-- Боковая колонка с логотипом и «бургером» -->
   <aside class="side">
     <div class="side-top">
       <a class="logo" href="/">
-        <img id="logo" alt="logo">
+        {# логотип берём из site_config если есть, иначе статичный #}
+        {% if site_config and site_config.logo %}
+          <img id="logo" src="{{ site_config.logo.url }}" alt="{{ site_config.site_name|default:'BloodSite' }}">
+        {% else %}
+          <img id="logo" src="{% static 'img/logo-fallback.png' %}" alt="logo">
+        {% endif %}
       </a>
-      <button class="burger" aria-label="menu" type="button">
+      <button class="burger" aria-label="menu" type="button" id="burgerBtn">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -33,9 +46,9 @@
     <header class="topbar">
       <div class="welcome" id="welcomeText">
         {% if user.is_authenticated %}
-          Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+          Добро пожаловать, <strong id="userName">{{ user.get_full_name|default:user.username }}</strong>
         {% else %}
-          Қош келдіңіз! <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+          Қош келдіңіз!
         {% endif %}
       </div>
 
@@ -55,12 +68,16 @@
             <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
           </button>
         {% else %}
-          <!-- Если вдруг снимешь login_required с /home/ -->
-          <a class="btn" href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+          <!-- Большая CTA-кнопка для анонимов справа -->
+          <div class="auth-buttons">
+            <a class="btn-auth btn-auth-primary" href="{% url 'signup' %}">Тіркелу / Регистрация</a>
+            <a class="btn-auth btn-auth-outline" href="{% url 'login' %}?next=/home/">Кіру / Войти</a>
+          </div>
         {% endif %}
       </div>
     </header>
 
+    {# профильный поповер — рендерим только если есть user #}
     {% if user.is_authenticated %}
       <div id="profilePopover" class="profile-popover hidden">
         <div class="profile-card">
@@ -73,7 +90,7 @@
           </div>
           <hr>
           <nav class="profile-menu">
-            <a href="#" class="profile-link">Жеке кабинет</a>
+            <a href="{% url 'profile' %}" class="profile-link">Жеке кабинет</a>
             <a href="{% url 'logout' %}?next=/" class="profile-link danger">Шығу</a>
           </nav>
         </div>
@@ -82,18 +99,18 @@
     {% endif %}
 
     <main class="content">
-      <!-- Блок 1: Герой-баннер -->
+      {# --- ЗДЕСЬ — главный блок landing: если аноним — CTA, если залогинен — короткая ссылка на профиль --- #}
       <section class="hero-card">
         <div class="hero-text">
-          <h1 id="heroTitle">Сдайте кровь - подарите жизнь!</h1>
-        <p id="heroSub">Зарегистрируйтесь и найдите ближайший центр</p>
+          <h1 id="heroTitle">Сдайте кровь — подарите жизнь!</h1>
+          <p id="heroSub">Зарегистрируйтесь и найдите ближайший центр</p>
         </div>
         <div class="hero-ill" aria-hidden="true">
           <img src="{% static 'blood_pj.png' %}" alt="">
         </div>
       </section>
 
-      <!-- Блок 2: Промо-приложение -->
+      {# --- ниже можешь скопировать остальные секции с home.html (promo, about и т.д.) --- #}
       <section class="promo-card">
         <div class="promo-text">
           <h2 id="promoTitle">BloodSeeker в твоем мобильном телефоне</h2>
@@ -103,7 +120,7 @@
           <img src="{% static 'phone.png' %}" alt="">
         </div>
       </section>
-      <!-- Блок "О нас" -->
+
       <section id="aboutSection" class="about">
         <div class="about-wrap container">
           <div class="about-illus">
@@ -112,17 +129,13 @@
 
           <div class="about-content">
             <h2 id="aboutTitle">О нас</h2>
-          
             <div id="aboutText" class="about-prose"></div>
           </div>
         </div>
       </section>
 
-
- 
     </main>
 
-    <!-- Низ страницы -->
     <footer class="footer">
       <div class="footer-inner">
         <div class="footer-cards">
@@ -138,13 +151,15 @@
         </div>
       </div>
 
-      <div class="copyright" id="footerText">© 2025 BloodSeeker. Все права защищены.</div>
+      <div class="copyright" id="footerText">
+        {% if site_config and site_config.footer_text_ru %}{{ site_config.footer_text_ru }}{% else %}© 2025 BloodSeeker. Все права защищены.{% endif %}
+      </div>
     </footer>
-
 
   </div>
 
-  <!-- Обязательно defer, чтобы скрипт выполнился после разметки -->
+  {# подключаем тот же JS что и home (важно) #}
   <script defer src="{% static 'home.js' %}"></script>
 </body>
 </html>
+{% endblock %}

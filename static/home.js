@@ -1,5 +1,13 @@
 // === helpers ===
-const api = (p) => fetch(`/api/v1/${p}`).then(r => r.json());
+const api = async (p) => {
+  const r = await fetch(`/api/v1/${p}`);
+  if (!r.ok) {
+    console.error(`API ${p} failed:`, r.status, r.statusText);
+    return {};
+  }
+  return r.json().catch(() => ({}));
+};
+
 
 // --- popover utils ---
 function $id(id) { return document.getElementById(id); }
@@ -25,12 +33,13 @@ window.addEventListener('resize',  closeAllPopovers);
 document.addEventListener('click', (e) => {
   const t = e.target;
   const inMenu    = inside($id('menuPopover'), t)    || inside(document.querySelector('.burger'), t);
-  const inProfile = inside($id('profilePopover'), t) || inside(document.querySelector('.user'), t);
+  const inProfile = inside($id('profilePopover'), t) || inside(document.getElementById('profileBtn'), t);
   if (!inMenu && !inProfile) closeAllPopovers();
 });
 
+
 // === Языковая логика ===
-let lang = 'kk'; // стартуем с казахского
+let lang = document.documentElement.lang || 'kk';
 const pick = (o, kk, ru, en) => {
   if (lang === 'kk') return o?.[kk];
   if (lang === 'ru') return o?.[ru];
@@ -60,17 +69,18 @@ async function loadConfig() {
 // Герой
 async function loadHero() {
   const hero = await api('site/hero/');
-  const t = document.getElementById('heroTitle');
-  const s = document.getElementById('heroSub');
-  if (t) t.textContent = pick(hero, 'title_kk', 'title_ru', 'title_en') || '';
-  if (s) s.textContent = pick(hero, 'subtitle_kk', 'subtitle_ru', 'subtitle_en') || '';
+  const titleEl = document.getElementById('heroTitle');
+  const subEl   = document.getElementById('heroSub');
+  if (titleEl) titleEl.textContent = pick(hero, 'title_kk', 'title_ru', 'title_en') || '';
+  if (subEl)   subEl.textContent   = pick(hero, 'subtitle_kk', 'subtitle_ru', 'subtitle_en') || '';
 
-  const cta = document.getElementById('heroCta'); // если будет
+  const cta = document.getElementById('heroCta');
   if (cta) {
     cta.textContent = pick(hero, 'cta_text_kk', 'cta_text_ru', 'cta_text_en') || '';
     cta.href = hero.cta_url || '#';
   }
 }
+
 
 // Контакты (значения из админки)
 // Контакты (для нижних карточек)
@@ -109,16 +119,16 @@ async function loadAbout() {
   try {
     const res = await fetch("/api/v1/about/");
     const data = await res.json();
-    document.getElementById("aboutText").innerHTML = data[`text_${lang}`];
-    document.getElementById("aboutTitle").textContent = {
-      ru: "О нас",
-      kk: "Біз туралы",
-      en: "About us"
-    }[lang];
+    const textEl  = document.getElementById("aboutText");
+    const titleEl = document.getElementById("aboutTitle");
+    const text = data?.[`text_${lang}`] || data?.text_ru || '';
+    if (textEl)  textEl.innerHTML = text;  // если приходит HTML из админки
+    if (titleEl) titleEl.textContent = (lang === 'ru') ? "О нас" : (lang === 'kk') ? "Біз туралы" : "About us";
   } catch (e) {
     console.error("Ошибка загрузки блока О нас:", e);
   }
 }
+
 
 // Меню из API (site/menu/)
 async function loadMenu() {
@@ -144,8 +154,10 @@ function handleLogout() {
     localStorage.removeItem('access');
     localStorage.removeItem('refresh');
   } catch (_) {}
-  window.location.href = '/home/'; // поменяй при необходимости
+  // серверный логаут (очистит сессию Django):
+  window.location.href = '/accounts/logout/?next=/';
 }
+
 
 // Локализация заголовков в карточках футера
 function setContactTitlesByLang() {
@@ -156,18 +168,24 @@ function setContactTitlesByLang() {
 }
 
 function setWelcomeByLang() {
-  const el = document.getElementById('welcomeText');
-  if (!el) return;
+  const wrap = document.getElementById('welcomeText');
+  if (!wrap) return;
 
-  const username = document.getElementById('userName')?.textContent || 'User';
+  const nameEl = document.getElementById('userName');
+  const username = nameEl ? nameEl.textContent.trim() : 'User';
 
-  const texts = {
-    kk: `Қош келдіңіз, ${username}`,
-    ru: `Добро пожаловать, ${username}`,
-    en: `Welcome, ${username}`
-  };
+  // если пользователь не залогинен, разметку трогать не будем — сервер сам показал ссылку "Кіру / Войти"
+  const isAuthed = !!document.getElementById('userNameRight') || !!document.getElementById('userName');
+  if (!isAuthed) return;
 
-  el.textContent = texts[lang] || texts.ru;
+  // ищем текстовый узел до/после спана и меняем только его
+  // формат: "Добро пожаловать, " + <span id="userName">...</span>
+  const prefix = (lang === 'kk') ? 'Қош келдіңіз, '
+               : (lang === 'en') ? 'Welcome, '
+               : 'Добро пожаловать, ';
+
+  // перерисуем содержимое, но сохраним <span id="userName">
+  wrap.innerHTML = `${prefix}<span id="userName">${username}</span>`;
 }
 
 function setPromoByLang() {
@@ -255,7 +273,7 @@ function buildProfilePopover() {
   const pop = document.getElementById('profilePopover');
   if (!pop) return;
 
-  const avatarEl   = document.querySelector('.avatar');
+  const avatarEl = document.querySelector('#profileBtn .avatar') || document.querySelector('.avatar');
   const nameEl     = document.getElementById('userNameRight') || document.getElementById('userName');
   const avatarSrc  = avatarEl ? avatarEl.src : '';
   const displayName = nameEl ? nameEl.textContent.trim() : 'User';
@@ -282,7 +300,7 @@ function buildProfilePopover() {
 
 
 function bindProfileMenu() {
-  const trigger  = document.querySelector('.user');
+  const trigger  = document.getElementById('profileBtn');      // ← было .querySelector('.user')
   const pop      = document.getElementById('profilePopover');
   const backdrop = document.getElementById('profileBackdrop');
   if (!trigger || !pop || !backdrop) return;
@@ -310,11 +328,9 @@ function bindProfileMenu() {
   });
   backdrop.addEventListener('click', closeMenu);
   window.addEventListener('resize', () => { if (!pop.classList.contains('hidden')) positionPopover(); });
-  window.addEventListener('scroll',  () => { if (!pop.classList.contains('hidden')) { 
-  pop.classList.add('hidden'); 
-  backdrop.classList.add('hidden'); 
-  }});
+  window.addEventListener('scroll',  () => { if (!pop.classList.contains('hidden')) closeMenu(); });
 }
+
 
 // === boot ===
 async function refresh() {

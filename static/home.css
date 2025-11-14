@@ -401,6 +401,69 @@ button,
   .about-prose { font-size: 16.5px; }
 }
 
+/* общий вид кнопок — сбрасываем возможные переборы */
+.btn-auth {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;        /* удобный размер */
+  height: 40px;             /* единая высота */
+  border-radius: 10px;      /* аккуратный радиус */
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform .08s ease, box-shadow .12s ease, filter .12s ease;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* primary — ровнее тень, чуть меньше радиус */
+.btn-auth-primary {
+  background: linear-gradient(180deg,#E53935 0%, #D32F2F 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(211,47,47,0.12);
+  border: 0;
+}
+
+/* уменьшаем hover-эффект, чтобы не «подпрыгивало» */
+.btn-auth-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(.98);
+  box-shadow: 0 8px 20px rgba(211,47,47,0.14);
+}
+
+/* outline — тонкая рамка, белый фон */
+.btn-auth-outline {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #e6e8eb;
+  box-shadow: none;
+}
+
+/* outline hover — мягкий фон, не меняем размер */
+.btn-auth-outline:hover {
+  background: #f8fafc;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+/* уменьшить визуальную ширину (если кнопка слишком широкая) */
+.auth-buttons a.btn-auth {
+  min-width: 0;
+}
+
+/* если кнопки «вылетают» над контентом — даём z-index */
+.auth-buttons, .btn-auth { z-index: 30; }
+.auth-actions, .auth-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* тонкая настройка: убираем слишком большой radius/тень у одного из элементов */
+.btn-auth-primary[style], .btn-auth-outline[style] { border-radius: 10px !important; box-shadow: none !important; }
 
 /* Анимация */
 @keyframes fadeIn{ from{opacity:0; transform:translateY(-2px)} to{opacity:1; transform:translateY(0)} }

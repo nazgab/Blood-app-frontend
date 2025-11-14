@@ -11,19 +11,6 @@ from import_export import resources
 from import_export.admin import ExportMixin
 from import_export.formats.base_formats import XLSX
 from django.utils import timezone
-from django.db.models import F, Value
-from django.db.models.functions import Concat, Coalesce, Lower
-from django.db.models.expressions import Func
-from django.db import DatabaseError
-from django.db import models as dj_models
-
-# Попытка импортировать Collate (Django 3.2+)
-try:
-    from django.db.models.functions import Collate
-
-    HAS_COLLATE = True
-except ImportError:
-    HAS_COLLATE = False
 
 
 @admin.register(models.SiteConfig)
@@ -131,97 +118,44 @@ class LegacyUserResource(resources.ModelResource):
         )
 
 
-COLLATION_NAME = "kk_KZ.utf8"
-
-
-class TextConcat(Func):
-    """
-    Рендерит IMMUTABLE-эквивалент CONCAT:
-    (COALESCE(expr1,'') || ' ' || COALESCE(expr2,''))
-    """
-
-    arity = 2
-    output_field = dj_models.CharField()
-    template = (
-        "(COALESCE(%(expressions)s, '') || ' ' || COALESCE(%(expressions)s_1, ''))"
-    )
-
-
-class RawCollate(Func):
-    """
-    Обходит строгую валидацию Django Collate:
-    (<expr>) COLLATE "kk_KZ.utf8"
-    """
-
-    arity = 1
-    template = f'(%(expressions)s) COLLATE "{COLLATION_NAME}"'
-    output_field = dj_models.CharField()
-
-
 # Функция для обработки изменений данных в админке
 @admin.register(LegacyUser)
 class LegacyUserAdmin(ExportMixin, admin.ModelAdmin):
     list_display = (
         "user_id",
-        "full_name_display",  # <- показываем ФИО из метода ниже
+        "full_name",
         "blood_group",
         "iin",
-        "rh_factor_display",
+        "rh_factor",
         "city",
         "address",
         "phone",
         "email",
-        "created_at_display",
+        "created_at",
     )
 
-    # чтобы применялся order_by из get_queryset
-    ordering = ()
+    # Метод для отображения полного имени
+    def full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip()
 
-    # ---------- отображение колонок ----------
-    def full_name_display(self, obj):
-        ln = (obj.last_name or "").strip()
-        fn = (obj.first_name or "").strip()
-        return f"{ln} {fn}".strip()
+    full_name.short_description = "Аты-жөні"  # Переименовываем для админки
+    full_name.admin_order_field = "last_name"  # Сортировка по фамилии
 
-    full_name_display.short_description = "Аты-жөні"
-    full_name_display.admin_order_field = "full_name_order"  # сортируем по аннотации
+    # Метод для отображения резус-фактора, если его нет, показываем "-"
+    def rh_factor(self, obj):
+        return getattr(obj, "rh_factor", "-")  # Если поля нет, возвращаем "-"
 
-    def rh_factor_display(self, obj):
-        return getattr(obj, "rh_factor", "-")
+    rh_factor.short_description = "Резус-фактор"
 
-    rh_factor_display.short_description = "Резус-фактор"
+    # Метод для отображения времени с учётом временной зоны
+    def created_at(self, obj):
+        if obj.created_at:
+            return timezone.localtime(obj.created_at)  # Преобразуем в локальное время
+        return "-"
 
-    def created_at_display(self, obj):
-        return timezone.localtime(obj.created_at) if obj.created_at else "-"
+    created_at.short_description = "Тіркелу күні"
 
-    created_at_display.short_description = "Тіркелу күні"
-
-    # ---------- правильная сортировка ----------
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
-        # Собираем "Фамилия Имя" безопасно через ORM
-        full_expr = Concat(
-            Coalesce(F("last_name"), Value("")),
-            Value(" "),
-            Coalesce(F("first_name"), Value("")),
-        )
-
-        # Пытаемся применить казахскую/русскую коллацию к ЦЕЛОМУ выражению
-        if HAS_COLLATE:
-            for col in ("kk_KZ.utf8", "ru_RU.utf8"):
-                try:
-                    qs2 = qs.annotate(full_name_order=Collate(full_expr, col))
-                    # Одно обращение к БД, чтобы отловить проблемы сразу
-                    list(qs2.values_list("full_name_order")[:1])
-                    return qs2.order_by("full_name_order")
-                except Exception:
-                    continue
-
-        # Фоллбек: стабильная сортировка по lower()
-        return qs.annotate(full_name_order=Lower(full_expr)).order_by("full_name_order")
-
-    # ---------- остальное ----------
+    # Поиск и фильтры
     search_fields = (
         "first_name",
         "last_name",
@@ -231,17 +165,19 @@ class LegacyUserAdmin(ExportMixin, admin.ModelAdmin):
         "phone",
         "blood_group",
     )
-    list_filter = ("blood_group", "city")
-    date_hierarchy = "created_at"
-    list_per_page = 25
+    list_filter = ("blood_group", "city")  # Фильтрация по группе крови и городу
+    date_hierarchy = "created_at"  # Иерархия по дате регистрации
+    list_per_page = 25  # Пагинация по 25 записей на странице
+    ordering = ("-created_at",)  # Сортировка по дате регистрации
+
     actions = ["make_admin", "export_legacy_users_csv", "export_legacy_users_excel"]
 
     def make_admin(self, request, queryset):
-        queryset.update(role="admin")
+        queryset.update(role="admin")  # Изменяем роль на 'admin' для выбранных записей
 
     make_admin.short_description = "Назначить роль 'admin' для выбранных доноров"
 
-    # --- экспорт CSV ---
+    # Функция для экспорта выбранных данных в CSV
     def export_legacy_users_csv(self, request, queryset):
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = 'attachment; filename="donors_legacy.csv"'
@@ -261,10 +197,8 @@ class LegacyUserAdmin(ExportMixin, admin.ModelAdmin):
             ]
         )
         for u in queryset:
-            full_name = (
-                f"{(u.last_name or '').strip()} {(u.first_name or '').strip()}".strip()
-            )
-            rh = getattr(u, "rh_factor", "-")
+            full_name = f"{u.last_name} {u.first_name}".strip()  # Получаем полное имя
+            rh = getattr(u, "rh_factor", "-")  # Если резус-фактор есть, используем его
             writer.writerow(
                 [
                     u.user_id,
@@ -283,18 +217,16 @@ class LegacyUserAdmin(ExportMixin, admin.ModelAdmin):
 
     export_legacy_users_csv.short_description = "Экспорт (CSV)"
 
-    # --- экспорт Excel ---
-    # --- экспорт Excel ---
+    # Функция для экспорта в Excel
     def export_legacy_users_excel(self, request, queryset):
-        dataset = LegacyUserResource().export(queryset)
-        # БЫЛО: dataset.xlsx  -> AttributeError
-        data = dataset.export('xlsx')  # bytes
-
-        return HttpResponse(
-            data,
+        dataset = LegacyUserResource().export(
+            queryset
+        )  # Экспортируем данные с помощью нашего ресурса
+        response = HttpResponse(
+            dataset.xlsx,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": 'attachment; filename="donors_legacy.xlsx"'},
         )
+        response["Content-Disposition"] = 'attachment; filename="donors_legacy.xlsx"'
+        return response
 
     export_legacy_users_excel.short_description = "Экспорт (Excel)"
-
