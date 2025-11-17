@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
-
+from corsheaders.defaults import default_headers
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -187,7 +187,13 @@ CORS_ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://localhost(:\d+)?$",
+    r"^https?://127\.0\.0\.1(:\d+)?$",
+]
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "content-type",
+]
 # На проде включите secure-куки:
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
