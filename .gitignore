@@ -28,3 +28,5 @@ mobile_app/.flutter-plugins
 mobile_app/.flutter-plugins-dependencies
 mobile_app/.metadata.env
 *.env
+.env
+*.env
