@@ -12,10 +12,8 @@
   {# ОБЯЗАТЕЛЬНО: этот блок позволит подсовывать auth.css из дочерних шаблонов #}
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
   {% block content %}{% endblock %}
-
-  {# если когда-нибудь захотим добавлять скрипты блоком #}
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

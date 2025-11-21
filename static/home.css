@@ -462,6 +462,11 @@ button,
   align-items: center;
   gap: 8px;
 }
+.medic-menu { background:#fff; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.14); min-width:220px; padding:6px 0; }
+.medic-menu ul { list-style:none; margin:0; padding:0; }
+.medic-menu .group-title { padding:12px 20px; font-weight:600; color:#333; }
+.medic-menu .menu-item a { display:block; padding:10px 20px; color:#222; text-decoration:none; }
+.medic-menu .menu-item a:hover { background:#f6f6f6; }
 /* тонкая настройка: убираем слишком большой radius/тень у одного из элементов */
 .btn-auth-primary[style], .btn-auth-outline[style] { border-radius: 10px !important; box-shadow: none !important; }
 

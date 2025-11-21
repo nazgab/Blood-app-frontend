@@ -1,0 +1,156 @@
+{# templates/medic_donations.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Донации — BloodSeeker{% endblock %}
+
+{# подключаем CSS в extra_head, как у тебя в base.html предусмотрено #}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'home.css' %}">
+{% endblock %}
+
+{% block content %}
+  <!-- Боковая колонка и бургер (как в home) -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="/">
+        <img id="logo" alt="logo">
+      </a>
+      <button class="burger" aria-label="menu" type="button">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </aside>
+
+  <div id="menuPopover" class="menu-popover hidden"></div>
+  <div id="menuBackdrop" class="menu-backdrop hidden"></div>
+
+  <!-- data-role переносим сюда (на .page), чтобы CSS/JS работали как в home -->
+  <div class="page" data-role="{% if is_medic %}medic{% else %}user{% endif %}">
+    <header class="topbar">
+      <div class="welcome" id="welcomeText">
+        {% if user.is_authenticated %}
+          Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+        {% else %}
+          Қош келдіңіз! <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
+      </div>
+
+      <div class="topbar-right">
+        <div class="langs" id="langBar">
+          <button class="lang-link" data-lang="kk">KK</button>
+          <span class="sep">|</span>
+          <button class="lang-link" data-lang="ru">RU</button>
+          <span class="sep">|</span>
+          <button class="lang-link" data-lang="en">EN</button>
+        </div>
+
+        {% if user.is_authenticated %}
+          <button class="user" type="button" aria-label="Профиль" id="profileBtn">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+            <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
+          </button>
+        {% else %}
+          <a class="btn" href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if user.is_authenticated %}
+      <div id="profilePopover" class="profile-popover hidden">
+        <div class="profile-card">
+          <div class="profile-row">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="">
+            <div>
+              <div class="name">{{ user.get_full_name|default:user.username }}</div>
+              <div class="muted">{{ user.email }}</div>
+            </div>
+          </div>
+          <hr>
+          <nav class="profile-menu">
+            <a href="/profile/" class="profile-link">Жеке кабинет</a>
+            <a href="{% url 'logout' %}?next=/" class="profile-link danger">Шығу</a>
+          </nav>
+        </div>
+      </div>
+      <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+    {% endif %}
+
+    <main class="content">
+      <!-- Новая содержательная часть для медиков: Донации -->
+      <section class="medic-donations container">
+        <h1>Донации — панель медика</h1>
+        <p class="muted">Здесь вы увидите список сдач/донорских записей, фильтры и быстрые действия.</p>
+
+        <div class="donations-controls">
+          <input id="donorSearch" placeholder="Поиск по имени / IIN / телефону" />
+          <select id="centerFilter">
+            <option value="">Все центры</option>
+          </select>
+          <button id="refreshDonations">Обновить</button>
+        </div>
+
+        <div id="donationsList" class="donations-list">
+          <!-- JS заполнит карточки доноров -->
+          <div class="empty-note">Загрузка данных...</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-cards">
+          <div class="footer-card">
+            <div class="footer-title" id="contactTitle">Контакты</div>
+            <div class="footer-sub" id="contactPhone"></div>
+          </div>
+
+          <div class="footer-card">
+            <div class="footer-title" id="emailTitle">Email</div>
+            <div class="footer-sub" id="contactEmail"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="copyright" id="footerText">© 2025 BloodSeeker. Все права защищены.</div>
+    </footer>
+  </div>
+{% endblock %}
+
+{# скрипты через блок extra_scripts (base их подставит внизу body) #}
+{% block extra_scripts %}
+<script defer src="{% static 'home.js' %}"></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', () => {
+  const list = document.getElementById('donationsList');
+  const btn = document.getElementById('refreshDonations');
+
+  async function load() {
+    list.innerHTML = '<div class="empty-note">Загрузка данных...</div>';
+    try {
+      const res = await fetch('/api/v1/medic/donations/');
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data.results || []);
+      if (!items.length) {
+        list.innerHTML = '<div class="empty-note">Данные не найдены</div>';
+        return;
+      }
+      list.innerHTML = '';
+      items.slice(0,50).forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'donor-row';
+        row.innerHTML = `<div class="d-left"><strong>${u.first_name||u.username} ${u.last_name||''}</strong><div class="muted">${u.email||''}</div></div>
+                         <div class="d-right">${u.blood_group||''} · ${u.city||''}</div>`;
+        list.appendChild(row);
+      });
+    } catch (e) {
+      list.innerHTML = '<div class="empty-note">Ошибка загрузки</div>';
+      console.error(e);
+    }
+  }
+
+  if (btn) btn.addEventListener('click', load);
+  load();
+});
+</script>
+{% endblock %}

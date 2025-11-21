@@ -4,6 +4,10 @@ from . import views
 from . import legacy_views as lviews
 from .views import AboutSectionView
 from .views_mobile import mobile_home
+from .views_medic import medic_home
+from .views_medic import medic_users, medic_donations
+from .views_medic import medic_export_users_csv
+from .views_medic import MedicLegacyUserListView
 
 urlpatterns = [
     # 🩺 Health check
@@ -38,6 +42,7 @@ urlpatterns = [
         lviews.DonationListByUserView.as_view(),
         name="legacy-user-donations",
     ),
+    path("medic/home/", medic_home, name="medic-home"),
     path(
         "legacy/users/<int:user_id>/bonus/",
         lviews.BonusByUserView.as_view(),
@@ -45,4 +50,8 @@ urlpatterns = [
     ),
     path("about/", AboutSectionView.as_view(), name="about-section"),
     path("m/", mobile_home, name="mobile_home"),
+    path("medic/users/", medic_users, name="medic-users"),
+    path("medic/donations/", medic_donations, name="medic-donations"),
+    path("medic/legacy-users/export/csv/", medic_export_users_csv, name="medic-legacy-users-export-csv"),
+    path("medic/legacy-users/", MedicLegacyUserListView.as_view(), name="medic-legacy-users"),
 ]

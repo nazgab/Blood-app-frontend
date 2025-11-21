@@ -6,6 +6,8 @@ from django.urls import reverse
 from .forms import SignupForm
 from django.contrib.auth import logout as django_logout
 from django.views.decorators.cache import never_cache
+from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.urls import reverse_lazy
 
 def signup(request):
     # Если уже залогинен — мягко перекидываем в кабинет
@@ -43,3 +45,11 @@ def logout_then_redirect(request):
     if next_url:
         return redirect(next_url)
     return redirect("index")
+
+class CustomLoginView(DjangoLoginView):
+    def get_success_url(self):
+        user = self.request.user
+        role = getattr(getattr(user, "profile", None), "role", "user")
+        if role == "medic":
+            return reverse_lazy("medic-home")
+        return reverse_lazy("home")

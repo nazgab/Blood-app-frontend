@@ -1,6 +1,11 @@
 // === helpers ===
 const api = async (p) => {
-  const r = await fetch(`/api/v1/${p}`);
+  const r = await fetch(`/api/v1/${p}`, {
+    credentials: 'same-origin',
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
   if (!r.ok) {
     console.error(`API ${p} failed:`, r.status, r.statusText);
     return {};
@@ -8,6 +13,19 @@ const api = async (p) => {
   return r.json().catch(() => ({}));
 };
 
+function buildMedicMenu(pop) {
+  pop.innerHTML = `
+    <nav class="medic-menu">
+      <ul>
+        <li class="group-title">Пользователи</li>
+        <li class="menu-item"><a href="/admin/?app_label=core&model=profile">Пользователи</a></li>
+
+        <li class="group-title">Донации</li>
+        <li class="menu-item"><a href="/admin/donations/">Донации</a></li>
+      </ul>
+    </nav>
+  `.trim();
+}
 
 // --- popover utils ---
 function $id(id) { return document.getElementById(id); }
@@ -136,17 +154,59 @@ async function loadMenu() {
   if (!pop) return;
   pop.innerHTML = '';
 
+  // роль из body dataset (set в шаблоне)
+  const role = document.body.dataset.role || 'user';
+
+  if (role === 'medic') {
+    // простое медик-меню — ровно два пункта
+    const items = [
+      { href: '/medic/users/', title: 'Пользователи' },
+      { href: '/medic/donations/', title: 'Донации' }
+    ];
+    items.forEach(item => {
+      const a = document.createElement('a');
+      a.className = 'menu-item';
+      a.href = item.href;
+      a.textContent = item.title;
+      pop.appendChild(a);
+    });
+    return;
+  }
+  if (document.body.dataset.role === 'medic') {
+    pop.innerHTML = `
+      <a class="menu-item" href="/medic/users/">Пользователи</a>
+      <a class="menu-item" href="/medic/donations/">Донации</a>
+    `;
+    return;
+  }
+  // --- обычное поведение для пользователей: грузим из API ---
   const data = await api('site/menu/');
   const items = data.results || [];
-
   items.forEach(item => {
     const a = document.createElement('a');
     a.className = 'menu-item';
-    a.href = item.href;
+    a.href = item.href || '#';
     a.textContent = pick(item, 'title_kk', 'title_ru', 'title_en');
     pop.appendChild(a);
   });
 }
+
+async function loadMedicDonations() {
+  if (window.location.pathname !== "/medic/donations/") return;
+  const container = document.getElementById("donationsList");
+  if (!container) return;
+  const data = await api("medic/donations/");
+  const rows = data.results || [];
+  container.innerHTML = rows.length ? rows.map(d => `
+    <div class="donation-item">
+      <div><strong>ID:</strong> ${d.id}</div>
+      <div><strong>User:</strong> ${d.user_id}</div>
+      <div><strong>Date:</strong> ${d.date || d.created_at || ''}</div>
+      <div><strong>Volume:</strong> ${d.volume || ''}</div>
+    </div>
+  `).join("") : "<p>Нет доноров / донаций</p>";
+}
+document.addEventListener("DOMContentLoaded", () => { loadMedicDonations(); });
 
 // Выход
 function handleLogout() {
@@ -331,6 +391,25 @@ function bindProfileMenu() {
   window.addEventListener('scroll',  () => { if (!pop.classList.contains('hidden')) closeMenu(); });
 }
 
+document.getElementById('menuPopover')?.addEventListener('click', function(e){
+  const a = e.target.closest('a');
+  if (!a) return;
+  const href = a.getAttribute('href') || '#';
+  // закроем меню визуально
+  document.getElementById('menuPopover').classList.add('hidden');
+  document.getElementById('menuBackdrop').classList.add('hidden');
+
+  // если это API-путь — подгрузим JSON и покажем в простом модальном окошке (вложи свою реализацию)
+  if (href.startsWith('/api/v1/')) {
+    e.preventDefault();
+    api(href.replace('/api/v1/','')).then(json=>{
+      // очень простой modal: можешь заменить render на свою функцию
+      const s = JSON.stringify(json, null, 2);
+      alert(s); // временно — потом заменим на красивый modal
+    }).catch(err => alert('Ошибка API: ' + err));
+  }
+  // иначе — браузер перейдёт по href сам (сначала меню закрыли)
+});
 
 // === boot ===
 async function refresh() {

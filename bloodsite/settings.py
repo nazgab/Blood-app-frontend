@@ -79,7 +79,7 @@ TEMPLATES = [
 
 # --- Аутентификация: редиректы ---
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/home/'
+LOGIN_REDIRECT_URL = "/redirect-after-login/"
 LOGOUT_REDIRECT_URL = '/'
 
 WSGI_APPLICATION = "bloodsite.wsgi.application"

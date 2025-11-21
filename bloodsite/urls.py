@@ -9,7 +9,9 @@ from core.views_mobile import mobile_home
 from core.views_public import index  # ← добавили
 from core.views_auth import signup, logout_then_redirect 
 from core.views_profile import profile_view
-
+from core.views_auth import CustomLoginView 
+from core.views_medic import medic_donations
+from core.views_medic import medic_users
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
     path("home/", login_required(TemplateView.as_view(template_name="home.html")), name="home"),
@@ -21,8 +23,11 @@ urlpatterns = [
     path("api/v1/", include("core.urls")),
     path("accounts/signup/", signup, name="signup"),
     path("accounts/logout/", logout_then_redirect, name="logout"), 
+    path("accounts/login/", CustomLoginView.as_view(), name="login"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("profile/", profile_view, name="profile"),
+    path("medic/donations/", medic_donations, name="medic-donations"),
+    path("medic/users/", medic_users, name="medic-users"), 
 ]
 
 if settings.DEBUG:

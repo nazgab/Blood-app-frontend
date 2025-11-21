@@ -156,5 +156,18 @@ class Profile(models.Model):
     # опционально — связь с legacy пользователем по id (чтобы знать источник)
     legacy_user_id = models.IntegerField(blank=True, null=True, db_index=True)
 
+    # ===== добавляем роль =====
+    ROLE_CHOICES = (
+        ("user", "Обычный пользователь"),
+        ("medic", "Медик"),
+        ("admin", "Админ"),
+    )
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
+
+    def is_medic(self):
+        return self.role == "medic"
+
     def __str__(self):
-        return f"Profile({self.user.username})"    
+        return f"Profile({self.user.username})"
+  

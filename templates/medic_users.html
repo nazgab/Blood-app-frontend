@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Пользователи — BloodSeeker{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'home.css' %}">
+<style>
+/* минимальная стилизация таблицы */
+.medic-table { width:100%; border-collapse:collapse; margin-top:18px; font-family: Poppins, Roboto, sans-serif; }
+.medic-table th, .medic-table td { padding:12px 14px; border-bottom:1px solid #eee; text-align:left; }
+.medic-controls { display:flex; gap:8px; align-items:center; margin:12px 0; }
+.btn { background:#e53935; color:#fff; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
+.btn.ghost { background:transparent; color:#333; border:1px solid #ccc; }
+.small-muted { color:#666; font-size:0.95rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- боковая колонка + бургер (скопировано из home) -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="/"><img id="logo" alt="logo"></a>
+      <button class="burger" aria-label="menu" type="button"><span></span><span></span><span></span></button>
+    </div>
+  </aside>
+  <div id="menuPopover" class="menu-popover hidden"></div>
+  <div id="menuBackdrop" class="menu-backdrop hidden"></div>
+
+  <div class="page">
+    <header class="topbar">
+      <div class="welcome" id="welcomeText">
+        Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+      </div>
+      <div class="topbar-right">
+        <div class="langs" id="langBar">
+          <button class="lang-link" data-lang="kk">KK</button>
+          <span class="sep">|</span>
+          <button class="lang-link" data-lang="ru">RU</button>
+          <span class="sep">|</span>
+          <button class="lang-link" data-lang="en">EN</button>
+        </div>
+        <button class="user" type="button" aria-label="Профиль" id="profileBtn">
+          <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+          <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content container">
+      <h1>Пользователи — панель медика</h1>
+      <p class="small-muted">Список legacy users с фильтрами и экспортом.</p>
+
+      <div class="medic-controls">
+        <input id="searchInput" placeholder="Поиск: имя / IIN / email" style="padding:8px;border-radius:6px;border:1px solid #ccc;min-width:320px">
+        <select id="filterBlood" style="padding:8px;border-radius:6px;border:1px solid #ccc;">
+          <option value="">Все группы</option>
+        </select>
+        <select id="filterCity" style="padding:8px;border-radius:6px;border:1px solid #ccc;">
+          <option value="">Все города</option>
+        </select>
+        <button id="btnRefresh" class="btn ghost">Обновить</button>
+        <div style="margin-left:auto">
+          <button id="btnExportCsv" class="btn">Export CSV</button>
+          <button id="btnExportXls" class="btn ghost">Export Excel</button>
+        </div>
+      </div>
+
+      <div id="tableWrap">
+        <table class="medic-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>USER ID</th><th>ФИО</th><th>BLOOD GROUP</th><th>IIN</th><th>CITY</th><th>PHONE</th><th>EMAIL</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            <tr><td colspan="7" class="small-muted">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner"><div class="footer-cards"><div class="footer-card"><div id="contactTitle" class="footer-title">Контакты</div><div id="contactPhone" class="footer-sub"></div></div><div class="footer-card"><div id="emailTitle" class="footer-title">Email</div><div id="contactEmail" class="footer-sub"></div></div></div></div>
+      <div class="copyright" id="footerText">© 2025 BloodSeeker</div>
+    </footer>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script defer src="{% static 'home.js' %}"></script>
+  <script defer src="{% static 'medic.js' %}"></script>
+
+  <!-- выставляем роль на body (если шаблон не может менять base.body атрибуты) -->
+  <script>
+    // если шаблон view передал is_medic (рекомендую) — используем его, иначе принудительно ставим medic
+    (function(){
+      try {
+        const isMedic = {{ is_medic|default:"True"|yesno:"true,false" }};
+        if (isMedic) document.body.dataset.role = 'medic';
+      } catch(e) {
+        // если шаблон не передал — всё равно ставим
+        document.body.dataset.role = 'medic';
+      }
+    })();
+  </script>
+{% endblock %}
