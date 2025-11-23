@@ -12,6 +12,8 @@ from core.views_profile import profile_view
 from core.views_auth import CustomLoginView 
 from core.views_medic import medic_donations
 from core.views_medic import medic_users
+from core.views_pages import history
+
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
     path("home/", login_required(TemplateView.as_view(template_name="home.html")), name="home"),
@@ -28,6 +30,8 @@ urlpatterns = [
     path("profile/", profile_view, name="profile"),
     path("medic/donations/", medic_donations, name="medic-donations"),
     path("medic/users/", medic_users, name="medic-users"), 
+    path("history/", history, name="history"),
+
 ]
 
 if settings.DEBUG:
