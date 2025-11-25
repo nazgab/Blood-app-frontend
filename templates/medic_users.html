@@ -6,18 +6,135 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <style>
-/* минимальная стилизация таблицы */
-.medic-table { width:100%; border-collapse:collapse; margin-top:18px; font-family: Poppins, Roboto, sans-serif; }
-.medic-table th, .medic-table td { padding:12px 14px; border-bottom:1px solid #eee; text-align:left; }
-.medic-controls { display:flex; gap:8px; align-items:center; margin:12px 0; }
-.btn { background:#e53935; color:#fff; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
-.btn.ghost { background:transparent; color:#333; border:1px solid #ccc; }
-.small-muted { color:#666; font-size:0.95rem; }
+/* Таблица */
+.medic-table { 
+  width:100%; 
+  border-collapse:collapse; 
+  margin-top:18px; 
+  font-family: Poppins, Roboto, sans-serif;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.medic-table th, .medic-table td { 
+  padding:12px 14px; 
+  border-bottom:1px solid #eee; 
+  text-align:left; 
+}
+.medic-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+.medic-table tbody tr:hover {
+  background: #fafafa;
+}
+
+/* Контролы */
+.medic-controls { 
+  display:flex; 
+  gap:8px; 
+  align-items:center; 
+  margin:12px 0;
+  flex-wrap: wrap;
+}
+
+/* Кнопки */
+.btn { 
+  background:#e53935; 
+  color:#fff; 
+  padding:10px 16px; 
+  border-radius:6px; 
+  border:none; 
+  cursor:pointer;
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn.ghost { 
+  background:#fff; 
+  color:#333; 
+  border:1px solid #ccc; 
+}
+.btn.ghost:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+.btn.ghost:disabled {
+  background: #fff;
+  color: #999;
+  border-color: #e0e0e0;
+}
+
+/* Пагинация */
+#paginationBox {
+  margin-top: 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#paginationBox button {
+  min-width: 40px;
+  height: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+#paginationBox .page-info {
+  margin-left: 16px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.small-muted { 
+  color:#666; 
+  font-size:0.95rem; 
+}
+
+/* Инпуты */
+.filter-input {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: Poppins, sans-serif;
+  min-width: 200px;
+  transition: border-color 0.2s;
+}
+.filter-input:focus {
+  outline: none;
+  border-color: #e53935;
+}
+
+/* Загрузка */
+.loading-row {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 16px;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-  <!-- боковая колонка + бургер (скопировано из home) -->
+  <!-- Боковая колонка + бургер -->
   <aside class="side">
     <div class="side-top">
       <a class="logo" href="/"><img id="logo" alt="logo"></a>
@@ -49,20 +166,28 @@
 
     <main class="content container">
       <h1>Пользователи — панель медика</h1>
-      <p class="small-muted">Список legacy users с фильтрами и экспортом.</p>
+      <p class="small-muted"></p>
 
       <div class="medic-controls">
-        <input id="searchInput" placeholder="Поиск: имя / IIN / email" style="padding:8px;border-radius:6px;border:1px solid #ccc;min-width:320px">
-        <select id="filterBlood" style="padding:8px;border-radius:6px;border:1px solid #ccc;">
-          <option value="">Все группы</option>
+        <input 
+          id="searchInput" 
+          class="filter-input"
+          placeholder="Поиск: имя / IIN / email" 
+          style="min-width:320px">
+        
+        <select id="filterBlood" class="filter-input">
+          <option value="">Все группы крови</option>
         </select>
-        <select id="filterCity" style="padding:8px;border-radius:6px;border:1px solid #ccc;">
+        
+        <select id="filterCity" class="filter-input">
           <option value="">Все города</option>
         </select>
-        <button id="btnRefresh" class="btn ghost">Обновить</button>
-        <div style="margin-left:auto">
-          <button id="btnExportCsv" class="btn">Export CSV</button>
-          <button id="btnExportXls" class="btn ghost">Export Excel</button>
+        
+        <button id="btnRefresh" class="btn ghost">🔄 Обновить</button>
+        
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button id="btnExportCsv" class="btn">📊 Export CSV</button>
+          <button id="btnExportXls" class="btn ghost">📈 Export Excel</button>
         </div>
       </div>
 
@@ -70,18 +195,39 @@
         <table class="medic-table" id="usersTable">
           <thead>
             <tr>
-              <th>USER ID</th><th>ФИО</th><th>BLOOD GROUP</th><th>IIN</th><th>CITY</th><th>PHONE</th><th>EMAIL</th>
+              <th>USER ID</th>
+              <th>ФИО</th>
+              <th>ГРУППА КРОВИ</th>
+              <th>IIN</th>
+              <th>ГОРОД</th>
+              <th>ТЕЛЕФОН</th>
+              <th>EMAIL</th>
             </tr>
           </thead>
           <tbody id="usersTbody">
-            <tr><td colspan="7" class="small-muted">Загрузка...</td></tr>
+            <tr><td colspan="7" class="loading-row">⏳ Загрузка данных...</td></tr>
           </tbody>
         </table>
       </div>
+
+      <!-- ✅ ДОБАВЛЕНО: Контейнер для пагинации -->
+      <div id="paginationBox"></div>
+
     </main>
 
     <footer class="footer">
-      <div class="footer-inner"><div class="footer-cards"><div class="footer-card"><div id="contactTitle" class="footer-title">Контакты</div><div id="contactPhone" class="footer-sub"></div></div><div class="footer-card"><div id="emailTitle" class="footer-title">Email</div><div id="contactEmail" class="footer-sub"></div></div></div></div>
+      <div class="footer-inner">
+        <div class="footer-cards">
+          <div class="footer-card">
+            <div id="contactTitle" class="footer-title">Контакты</div>
+            <div id="contactPhone" class="footer-sub"></div>
+          </div>
+          <div class="footer-card">
+            <div id="emailTitle" class="footer-title">Email</div>
+            <div id="contactEmail" class="footer-sub"></div>
+          </div>
+        </div>
+      </div>
       <div class="copyright" id="footerText">© 2025 BloodSeeker</div>
     </footer>
   </div>
@@ -89,17 +235,14 @@
 
 {% block extra_scripts %}
   <script defer src="{% static 'home.js' %}"></script>
-  <script defer src="{% static 'medic.js' %}"></script>
+  <script defer src="{% static 'medic.js' %}?v=4"></script>
 
-  <!-- выставляем роль на body (если шаблон не может менять base.body атрибуты) -->
   <script>
-    // если шаблон view передал is_medic (рекомендую) — используем его, иначе принудительно ставим medic
     (function(){
       try {
         const isMedic = {{ is_medic|default:"True"|yesno:"true,false" }};
         if (isMedic) document.body.dataset.role = 'medic';
       } catch(e) {
-        // если шаблон не передал — всё равно ставим
         document.body.dataset.role = 'medic';
       }
     })();
