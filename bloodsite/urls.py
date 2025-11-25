@@ -13,6 +13,7 @@ from core.views_auth import CustomLoginView
 from core.views_medic import medic_donations
 from core.views_medic import medic_users
 from core.views_pages import history
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
@@ -26,12 +27,40 @@ urlpatterns = [
     path("accounts/signup/", signup, name="signup"),
     path("accounts/logout/", logout_then_redirect, name="logout"), 
     path("accounts/login/", CustomLoginView.as_view(), name="login"),
+    path(
+        "accounts/password_reset/",
+        auth_views.PasswordResetView.as_view(
+            template_name="registration/password_reset.html"
+        ),
+        name="password_reset",
+    ),
+    path(
+        "accounts/password_reset/done/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="registration/password_reset_done.html"
+        ),
+        name="password_reset_done",
+    ),
+    path(
+        "accounts/reset/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="registration/password_reset_confirm.html"
+        ),
+        name="password_reset_confirm",
+    ),
+    path(
+        "accounts/reset/done/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="registration/password_reset_complete.html"
+        ),
+        name="password_reset_complete",
+    ),
     path("accounts/", include("django.contrib.auth.urls")),
     path("profile/", profile_view, name="profile"),
     path("medic/donations/", medic_donations, name="medic-donations"),
     path("medic/users/", medic_users, name="medic-users"), 
     path("history/", history, name="history"),
-
+    
 ]
 
 if settings.DEBUG:
