@@ -1,0 +1,44 @@
+name: name
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0" # ✅ безопасный диапазон для большинства версий Flutter/Dart
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Иконки
+  cupertino_icons: ^1.0.8
+
+  # Локализация (для easy_localization)
+  flutter_localizations:
+    sdk: flutter
+  easy_localization: ^3.0.5 # ✅ добавляем пакет для мультиязычности
+  intl: 0.19.0 # используется easy_localization внутри
+
+  # Сохранение выбранного языка
+  shared_preferences: ^2.3.2
+
+  # Управление состоянием
+  provider: ^6.0.5
+
+  http: ^0.13.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Статические ресурсы
+  assets:
+    - assets/images/welcome_illustration.png
+    - assets/images/magnum.png
+    - assets/images/sulpak.png
+    - assets/images/fresh.png
