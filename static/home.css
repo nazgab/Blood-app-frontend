@@ -580,13 +580,13 @@ button,
 /* тонкая настройка: убираем слишком большой radius/тень у одного из элементов */
 .btn-auth-primary[style], .btn-auth-outline[style] { border-radius: 10px !important; box-shadow: none !important; }
 
-/* Container & page title */
-.container {
+/* --- ВСЁ ОГРАНИЧЕНО ТОЛЬКО ДЛЯ ЛИЧНОГО КАБИНЕТА --- */
+.profile-page .container {
   max-width: 980px;
   margin: 22px auto;
   padding: 0 12px;
 }
-.container h2 {
+.profile-page .container h2 {
   margin: 0 0 16px 0;
   font-size: 24px;
   font-weight: 700;
@@ -594,7 +594,7 @@ button,
 }
 
 /* Card base */
-.card {
+.profile-page .card {
   background: var(--card-bg);
   border-radius: var(--card-radius);
   padding: 20px;
@@ -605,7 +605,7 @@ button,
 }
 
 /* Card title */
-.card h3 {
+.profile-page .card h3 {
   margin: 0 0 14px 0;
   font-size: 20px;
   font-weight: 600;
@@ -613,31 +613,34 @@ button,
 }
 
 /* Personal grid */
-.personal-grid {
+.profile-page .personal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 22px;
   align-items: start;
 }
-.personal-grid .col { min-width: 0; }
+.profile-page .personal-grid .col { min-width: 0; }
 
 /* Label + value */
-.pair { margin-bottom: 12px; }
-.pair .label, .pair label, .card div[style*="font-weight:600"] {
+.profile-page .pair { margin-bottom: 12px; }
+.profile-page .pair .label,
+.profile-page .pair label,
+.profile-page .card div[style*="font-weight:600"] {
   display:block;
   font-weight:600;
   margin-bottom:6px;
   font-size:14px;
   color:#111;
 }
-.pair .value, .muted {
+.profile-page .pair .value, 
+.profile-page .muted {
   color: var(--muted);
   font-size:15px;
   line-height:1.4;
 }
 
 /* Change password button */
-.btn-change-password {
+.profile-page .btn-change-password {
   position: absolute;
   right: 20px;
   top: 18px;
@@ -653,10 +656,10 @@ button,
 }
 
 /* Contact card specifics */
-.contact-card { padding-top: 26px; }
+.profile-page .contact-card { padding-top: 26px; }
 
-/* Edit link (right top pencil) */
-.card .edit-link {
+/* Edit link */
+.profile-page .card .edit-link {
   position: absolute;
   right: 18px;
   top: 18px;
@@ -669,7 +672,9 @@ button,
 }
 
 /* Contact form grid */
-.contact-form, .contact-grid, form[method="post"][style*="grid"] {
+.profile-page .contact-form,
+.profile-page .contact-grid,
+.profile-page form[method="post"][style*="grid"] {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 22px;
@@ -677,7 +682,11 @@ button,
 }
 
 /* Input pill style */
-.input-pill, input[type="text"], input[type="email"], input[type="tel"], .card input {
+.profile-page .input-pill,
+.profile-page input[type="text"],
+.profile-page input[type="email"],
+.profile-page input[type="tel"],
+.profile-page .card input {
   display:block;
   width:100%;
   padding: 14px 18px;
@@ -689,14 +698,15 @@ button,
   color:#222;
   outline:none;
 }
-.input-pill::placeholder { color:#cfcfcf; }
-.input-pill:focus, .card input:focus {
+.profile-page .input-pill::placeholder { color:#cfcfcf; }
+.profile-page .input-pill:focus,
+.profile-page .card input:focus {
   border-color: rgba(217,74,69,0.18);
   box-shadow: 0 8px 20px rgba(0,0,0,0.06) inset;
 }
 
 /* Buttons */
-.btn-auth-primary {
+.profile-page .btn-auth-primary {
   background: linear-gradient(180deg,#E53935 0%, #D32F2F 100%);
   color:#fff;
   box-shadow: 0 6px 16px rgba(211,47,47,0.12);
@@ -705,19 +715,38 @@ button,
   border-radius:10px;
   font-weight:700;
 }
-.btn-auth-outline { background:#fff; border:1px solid #e6e8eb; color:#111827; padding:8px 16px; border-radius:10px; }
+.profile-page .btn-auth-outline {
+  background:#fff;
+  border:1px solid #e6e8eb;
+  color:#111827;
+  padding:8px 16px;
+  border-radius:10px;
+}
 
-/* Slight divider look between cards (shadow + border) */
-.card + .card {
+/* Shadow between cards */
+.profile-page .card + .card {
   margin-top: 8px;
 }
 
 /* Responsive */
 @media (max-width: 880px) {
-  .personal-grid, .contact-form { grid-template-columns: 1fr; gap:14px; }
-  .container { padding: 0 12px; margin: 16px auto; }
-  .btn-change-password { top: 12px; right: 12px; padding:7px 12px; border-radius:10px; }
+  .profile-page .personal-grid,
+  .profile-page .contact-form {
+    grid-template-columns: 1fr;
+    gap:14px;
+  }
+  .profile-page .container {
+    padding: 0 12px;
+    margin: 16px auto;
+  }
+  .profile-page .btn-change-password {
+    top: 12px;
+    right: 12px;
+    padding:7px 12px;
+    border-radius:10px;
+  }
 }
+
 
 /* Анимация */
 @keyframes fadeIn{ from{opacity:0; transform:translateY(-2px)} to{opacity:1; transform:translateY(0)} }
