@@ -6,6 +6,7 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<link rel="stylesheet" href="{% static 'profile.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -18,7 +19,6 @@
         <img id="logo" src="{% static 'img/logo-fallback.png' %}" alt="logo">
       {% endif %}
     </a>
-
     <button class="burger" aria-label="menu" type="button" id="burgerBtn">
       <span></span><span></span><span></span>
     </button>
@@ -30,31 +30,27 @@
 
 <div class="page">
   <header class="topbar">
-    <div class="left-top">
-      <a class="back-link" href="javascript:history.back()">‹ Назад</a>
-    </div>
-
-    <div class="welcome" id="welcomeText">
+    <div class="welcome">
       {% if user.is_authenticated %}
-        Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+         <span>{{ user.get_full_name|default:user.username }}</span>
       {% else %}
-        Қош келдіңіз! <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+         <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
       {% endif %}
     </div>
 
     <div class="topbar-right">
-      <div class="langs" id="langBar">
+      <div class="langs">
         <button class="lang-link" data-lang="kk">KK</button>
         <span class="sep">|</span>
-        <button class="lang-link active" data-lang="ru">RU</button>
+        <button class="lang-link" data-lang="ru">RU</button>
         <span class="sep">|</span>
         <button class="lang-link" data-lang="en">EN</button>
       </div>
 
       {% if user.is_authenticated %}
-        <button class="user" type="button" aria-label="Профиль" id="profileBtn">
+        <button class="user" id="profileBtn">
           <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
-          <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
+          <span class="user-name">{{ user.first_name|default:user.username }}</span>
         </button>
       {% else %}
         <div class="auth-buttons">
@@ -85,49 +81,49 @@
     <div id="profileBackdrop" class="profile-backdrop hidden"></div>
   {% endif %}
 
-  <main class="content">
-    <div class="container">
+  <main class="content profile-page">
+    <div class="container profile-page">
 
-      <h2>Жеке кабинет / Личный кабинет</h2>
+      <!-- "Назад" — теперь внутри контейнера, слева над заголовком -->
+      <a class="back-btn" href="javascript:history.back()" aria-label="Назад">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Назад
+      </a>
+
+      <h2>Личный кабинет</h2>
 
       <!-- Персональные данные -->
-      <section class="card personal-card">
+      <section class="card">
         <h3>Персональные данные</h3>
 
-        {% if user.is_authenticated %}
-          <button class="btn-change-password" type="button">Изменить пароль</button>
-        {% endif %}
+        <button class="btn-change-password" type="button">Изменить пароль</button>
 
         <div class="personal-grid">
-          <div class="col">
+          <div>
             <div class="pair">
-              <div class="label">Фамилия:</div>
+              <label>Фамилия:</label>
               <div class="value muted">
-                {% if mode == "legacy" and legacy %}
-                  {{ legacy.last_name|default:"—" }}
-                {% elif mode == "profile" and form %}
-                  {{ form.last_name.value|default:"—" }}
-                {% else %}
-                  —
-                {% endif %}
+                {% if mode == "legacy" and legacy %}{{ legacy.last_name|default:"—" }}
+                {% elif mode == "profile" and form %}{{ form.last_name.value|default:"—" }}
+                {% else %}—{% endif %}
               </div>
             </div>
 
             <div class="pair">
-              <div class="label">Отчество:</div>
+              <label>Отчество:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}
                   {% if legacy.middle_name %}{{ legacy.middle_name }}{% elif legacy.middle %}{{ legacy.middle }}{% else %}—{% endif %}
                 {% elif mode == "profile" and form %}
                   {{ form.middle_name.value|default:"—" }}
-                {% else %}
-                  —
-                {% endif %}
+                {% else %}—{% endif %}
               </div>
             </div>
 
             <div class="pair">
-              <div class="label">Вес:</div>
+              <label>Вес:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.weight|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.weight.value|default:"—" }}
@@ -136,7 +132,7 @@
             </div>
 
             <div class="pair">
-              <div class="label">Группа крови:</div>
+              <label>Группа крови:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.blood_group|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.blood_group.value|default:"—" }}
@@ -145,9 +141,9 @@
             </div>
           </div>
 
-          <div class="col">
+          <div>
             <div class="pair">
-              <div class="label">Имя:</div>
+              <label>Имя:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.first_name|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.first_name.value|default:"—" }}
@@ -156,7 +152,7 @@
             </div>
 
             <div class="pair">
-              <div class="label">ИИН:</div>
+              <label>ИИН:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.iin|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.iin.value|default:"—" }}
@@ -165,7 +161,7 @@
             </div>
 
             <div class="pair">
-              <div class="label">Город:</div>
+              <label>Город:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.city|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.city.value|default:"—" }}
@@ -174,7 +170,7 @@
             </div>
 
             <div class="pair">
-              <div class="label">Адрес:</div>
+              <label>Адрес:</label>
               <div class="value muted">
                 {% if mode == "legacy" and legacy %}{{ legacy.address|default:"—" }}
                 {% elif mode == "profile" and form %}{{ form.address.value|default:"—" }}
@@ -186,20 +182,17 @@
       </section>
 
       <!-- Контактные данные -->
-      <section class="card contact-card">
+      <section class="card">
         <h3>Контактные данные</h3>
-
-        <a class="edit-link" href="#">✏️ Изменить</a>
 
         {% if mode == "legacy" and legacy %}
           <div class="contact-grid">
-            <div class="pair">
-              <div class="label">Email:</div>
+            <div>
+              <label>Email:</label>
               <div class="value muted">{{ legacy.email|default:"—" }}</div>
             </div>
-
-            <div class="pair">
-              <div class="label">Номер телефона:</div>
+            <div>
+              <label>Номер телефона:</label>
               <div class="value muted">{{ legacy.phone|default:"—" }}</div>
             </div>
           </div>
@@ -208,15 +201,12 @@
           <form method="post" class="contact-form">
             {% csrf_token %}
             <div>
-              <label class="label">Email</label>
+              <label>Email</label>
               {{ form.email }}
-              {% if form.email.errors %}<div class="auth-error">{{ form.email.errors }}</div>{% endif %}
             </div>
-
             <div>
-              <label class="label">Номер телефона</label>
+              <label>Номер телефона</label>
               {{ form.phone }}
-              {% if form.phone.errors %}<div class="auth-error">{{ form.phone.errors }}</div>{% endif %}
             </div>
 
             <div class="form-actions">
@@ -225,8 +215,6 @@
             </div>
           </form>
 
-        {% else %}
-          <div class="muted">Контактная информация недоступна.</div>
         {% endif %}
       </section>
 
@@ -235,8 +223,12 @@
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="copyright" id="footerText">
-        {% if site_config and site_config.footer_text_ru %}{{ site_config.footer_text_ru }}{% else %}© 2025 BloodSeeker. Все права защищены.{% endif %}
+      <div class="copyright">
+        {% if site_config and site_config.footer_text_ru %}
+          {{ site_config.footer_text_ru }}
+        {% else %}
+          © 2025 BloodSeeker. Все права защищены.
+        {% endif %}
       </div>
     </div>
   </footer>
@@ -244,4 +236,3 @@
 
 <script defer src="{% static 'home.js' %}"></script>
 {% endblock %}
- 
