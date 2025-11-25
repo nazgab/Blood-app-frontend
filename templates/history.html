@@ -1,0 +1,220 @@
+{% load static %}
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BloodSeeker — Қан тапсыру</title>
+
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
+
+  <!-- Боковая панель -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="/"><img id="logo" alt="logo"></a>
+      <button class="burger" aria-label="menu" type="button"><span></span><span></span><span></span></button>
+    </div>
+  </aside>
+
+  <div id="menuPopover" class="menu-popover hidden"></div>
+  <div id="menuBackdrop" class="menu-backdrop hidden"></div>
+
+  <div class="page">
+
+    <!-- Верх -->
+    <header class="topbar">
+      <div class="welcome">
+        {% if user.is_authenticated %}
+          Қош келдіңіз, <strong id="userName">{{ user.get_full_name|default:user.username }}</strong>
+        {% else %}
+          Кіру қажет. <a href="{% url 'login' %}?next={{ request.path }}">Логин</a>
+        {% endif %}
+      </div>
+
+      <div class="topbar-right">
+        <div class="langs">
+          <button class="lang-link">KK</button> | 
+          <button class="lang-link">RU</button> | 
+          <button class="lang-link">EN</button>
+        </div>
+
+        {% if user.is_authenticated %}
+          <button class="user" id="profileBtn">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="">
+            <span>{{ user.first_name|default:user.username }}</span>
+          </button>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if user.is_authenticated %}
+      <div id="profilePopover" class="profile-popover hidden">
+        <div class="profile-card">
+          <div class="profile-row">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="">
+            <div>
+              <div class="name">{{ user.get_full_name }}</div>
+              <div class="muted">{{ user.email }}</div>
+            </div>
+          </div>
+          <hr>
+          <a href="#" class="profile-link">Жеке кабинет</a>
+          <a href="{% url 'logout' %}" class="profile-link danger">Шығу</a>
+        </div>
+      </div>
+      <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+    {% endif %}
+
+
+    <!-- ================= CONTENT ================= -->
+    <main class="content dntr-content">
+
+      <div class="dntr-container">
+
+        <h1 class="dntr-title">Қан тапсыру тарихы</h1>
+        <p class="dntr-sub">Соңғы 6 айдағы донор белсенділігі</p>
+
+        <!-- FILTER -->
+        <div class="dntr-filter-box">
+          <select class="dntr-select" id="dntr-date-filter">
+            <option>Мерзім: Барлығы</option>
+            <option>Соңғы 30 күн</option>
+            <option>3 ай</option>
+            <option>6 ай</option>
+          </select>
+
+          <select class="dntr-select" id="dntr-center-filter">
+            <option>Орталық: Барлығы</option>
+            <option>Ұлттық қан банкі</option>
+            <option>№1 қан орталығы</option>
+          </select>
+
+          <button class="dntr-export-btn">PDF / Excel</button>
+        </div>
+
+        <!-- HISTORY TABLE -->
+        <table class="dntr-table" id="dntr-table">
+          <thead>
+            <tr>
+              <th>Күні</th>
+              <th>Орталық</th>
+              <th>Қан көлемі</th>
+              <th>Мәртебе</th>
+              <th>Бонус</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>12.02.2025</td>
+              <td>Ұлттық қан орталығы</td>
+              <td>450 мл</td>
+              <td><span class="dntr-status dntr-ok">Қабылданды</span></td>
+              <td>+300 pts</td>
+            </tr>
+
+            <tr>
+              <td>05.01.2025</td>
+              <td>№1 қан орталығы</td>
+              <td>450 мл</td>
+              <td><span class="dntr-status dntr-wait">Өңделуде</span></td>
+              <td>-</td>
+            </tr>
+
+            <tr>
+              <td>19.11.2024</td>
+              <td>Ұлттық қан банкі</td>
+              <td>450 мл</td>
+              <td><span class="dntr-status dntr-no">Бас тартылды</span></td>
+              <td>0</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-cards">
+          <div class="footer-card">
+            <div class="footer-title">Контакты</div>
+            <div class="footer-sub">+7 700 000 00 00</div>
+          </div>
+          <div class="footer-card">
+            <div class="footer-title">Email</div>
+            <div class="footer-sub">support@example.kz</div>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">© 2025 BloodSeeker</div>
+    </footer>
+  </div>
+
+
+<!-- STYLE -->
+<style>
+  .dntr-content {min-height: calc(100vh - 240px);}
+  .dntr-container{padding:20px;font-family:'Poppins',sans-serif;}
+  .dntr-title{font-size:26px;font-weight:600;margin-bottom:4px;}
+  .dntr-sub{color:#777;margin-bottom:18px;font-size:14px;}
+
+  .dntr-filter-box{background:white;padding:16px;border-radius:12px;
+    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+
+  .dntr-select{padding:9px 12px;border:1px solid #ccc;border-radius:6px;}
+  .dntr-export-btn{background:#C8243C;color:white;padding:10px 16px;
+    border-radius:8px;border:none;font-weight:600;cursor:pointer;}
+
+  .dntr-table{width:100%;border-collapse:collapse;background:white;
+    border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+  .dntr-table th{background:#EAF1FF;padding:12px;text-align:left;}
+  .dntr-table td{padding:12px;border-top:1px solid #eee;}
+
+  .dntr-status{padding:4px 10px;border-radius:6px;font-weight:600;font-size:13px;}
+  .dntr-ok{background:#DFF6E3;color:#0F7A3B;}
+  .dntr-wait{background:#FFF6C7;color:#947800;}
+  .dntr-no{background:#F8D3D3;color:#A40F0F;}
+</style>
+
+<!-- JS Filter -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const rows = document.querySelectorAll("#dntr-table tbody tr");
+  const dateFilter = document.getElementById("dntr-date-filter");
+  const centerFilter = document.getElementById("dntr-center-filter");
+
+  function applyFilters() {
+    rows.forEach(row => {
+      const date = row.children[0].innerText;
+      const center = row.children[1].innerText;
+
+      let show = true;
+
+      if (dateFilter.value === "Соңғы 30 күн" && date < "12.01.2025") show = false;
+      if (dateFilter.value === "3 ай" && date < "12.11.2024") show = false;
+      if (dateFilter.value === "6 ай" && date < "12.08.2024") show = false;
+
+      if (centerFilter.value !== "Орталық: Барлығы" && center !== centerFilter.value) show = false;
+
+      row.style.display = show ? "" : "none";
+    });
+  }
+
+  dateFilter.addEventListener("change", applyFilters);
+  centerFilter.addEventListener("change", applyFilters);
+});
+</script>
+
+<script defer src="{% static 'home.js' %}"></script>
+
+</body>
+</html>
