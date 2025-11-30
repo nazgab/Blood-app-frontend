@@ -111,7 +111,10 @@
                 <option value="O-" data-i18n-option="O-">O-</option>
               </select>
             </div>
-            
+
+            {# скрытое поле для IIN — заполняется JS'ом при выборе донора #}
+            <input type="hidden" id="iinHidden" name="iin" value="" />
+
             <div class="row-field">
               <label class="visually-hidden" for="donorNameSelect">Имя донора</label>
               <select id="donorNameSelect" name="donor_name" data-i18n-select="name_placeholder">
@@ -167,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const donorSelect = document.getElementById('donorSelect');
   const donorNameSelect = document.getElementById('donorNameSelect');
   const donorAddressSelect = document.getElementById('donorAddressSelect');
+  const iinHidden = document.getElementById('iinHidden');
   const form = document.getElementById('donationForm');
   const msg = document.getElementById('donationMsg');
 
@@ -354,9 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // option для основного селекта (IIN/phone/ID)
       const opt = document.createElement('option');
       opt.value = uid;
+      // записываем IIN в data-атрибут, чтобы легче читать
+      const iin = (u.iin ?? u.IIN ?? '').toString();
+      if (iin) opt.dataset.iin = iin;
       opt.dataset.firstName = u.first_name || "";
       opt.dataset.lastName = u.last_name || "";
-      const iin = u.iin ?? u.IIN ?? '';
       const phone = u.phone ?? u.mobile ?? '';
       const name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
       let label = '';
@@ -393,8 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!val) {
         if (donorNameSelect) donorNameSelect.value = "";
         if (donorAddressSelect) donorAddressSelect.value = "";
+        if (iinHidden) iinHidden.value = "";
         return;
       }
+
+      // синхронизируем имя и адрес если есть опции
       if (donorNameSelect) {
         const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
         if (nameOpt) donorNameSelect.value = val;
@@ -403,6 +412,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
         if (addrOpt) donorAddressSelect.value = val;
       }
+
+      // ставим IIN из donorMap или из data-iin опции
+      let iinVal = '';
+      const opt = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+      if (opt && opt.dataset && opt.dataset.iin) {
+        iinVal = opt.dataset.iin || '';
+      } else {
+        const d = donorMap.get(String(val));
+        if (d) iinVal = (d.iin || d.IIN || '') + '';
+      }
+      if (iinHidden) iinHidden.value = iinVal;
+
+      // Если name/address нет — создаём их из donorMap (у вас уже была эта логика)
       const d = donorMap.get(String(val));
       if (d) {
         const full = ((d.first_name || '') + ' ' + (d.last_name || '')).trim();
@@ -426,9 +448,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (donorNameSelect) {
     donorNameSelect.addEventListener('change', () => {
       const val = donorNameSelect.value;
-      if (!val) return;
+      if (!val) {
+        if (iinHidden) iinHidden.value = "";
+        return;
+      }
       const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-      if (main) donorSelect.value = val;
+      if (main) {
+        donorSelect.value = val;
+        // если у main есть data-iin — применим
+        if (main.dataset && main.dataset.iin) {
+          if (iinHidden) iinHidden.value = main.dataset.iin || '';
+        } else {
+          const d = donorMap.get(String(val));
+          if (d && iinHidden) iinHidden.value = (d.iin || d.IIN || '') + '';
+        }
+      } else {
+        // если нет основного — попытаемся заполнить iin из donorMap
+        const d = donorMap.get(String(val));
+        if (d && iinHidden) iinHidden.value = (d.iin || d.IIN || '') + '';
+      }
+
       if (donorAddressSelect) {
         const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
         if (addrOpt) donorAddressSelect.value = val;
@@ -439,9 +478,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (donorAddressSelect) {
     donorAddressSelect.addEventListener('change', () => {
       const val = donorAddressSelect.value;
-      if (!val) return;
+      if (!val) {
+        if (iinHidden) iinHidden.value = "";
+        return;
+      }
       const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-      if (main) donorSelect.value = val;
+      if (main) {
+        donorSelect.value = val;
+        if (main.dataset && main.dataset.iin) {
+          if (iinHidden) iinHidden.value = main.dataset.iin || '';
+        } else {
+          const d = donorMap.get(String(val));
+          if (d && iinHidden) iinHidden.value = (d.iin || d.IIN || '') + '';
+        }
+      } else {
+        const d = donorMap.get(String(val));
+        if (d && iinHidden) iinHidden.value = (d.iin || d.IIN || '') + '';
+      }
+
       if (donorNameSelect) {
         const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
         if (nameOpt) donorNameSelect.value = val;
@@ -484,12 +538,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (res.status === 201) {
-        const created = await res.json();
+        const created = await res.json().catch(()=>({}));
         msg.textContent = 'Запись успешно создана (ID: ' + (created.admin_donation_id || created.id || '') + ')';
         msg.style.color = 'green';
         form.reset();
         if (donorNameSelect) donorNameSelect.value = "";
         if (donorAddressSelect) donorAddressSelect.value = "";
+        if (iinHidden) iinHidden.value = "";
       } else if (res.status === 400) {
         const j = await res.json().catch(()=>null);
         msg.textContent = (j && (j.detail || JSON.stringify(j))) || 'Ошибка валидации (400)';
@@ -516,7 +571,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-
-
 {% endblock %}
-

@@ -14,7 +14,9 @@ from .serializers import DonationSerializer
 from .permissions import IsMedicOrAdmin
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-
+import logging, traceback
+from django.db import transaction, DatabaseError, IntegrityError
+from django.conf import settings
 # legacy imports (optional)
 from .legacy_models import LegacyUser
 try:
@@ -121,6 +123,7 @@ def medic_export_users_csv(request):
         ])
     return response
 
+logger = logging.getLogger(__name__)
 
 class MedicDonationsList(APIView):
     permission_classes = [IsAuthenticated]
@@ -148,7 +151,6 @@ class MedicDonationsList(APIView):
                 "blood_group": d.blood_group,
                 "center_id": d.center_id,
                 "employee_id": d.employee_id,
-                # если хотите — можно подставлять имя из legacy или из связанной таблицы:
                 "first_name": u.first_name if u else None,
                 "last_name": u.last_name if u else None,
             }
@@ -156,7 +158,78 @@ class MedicDonationsList(APIView):
 
         return Response(result)
 
-        
+    def post(self, request):
+        """
+        Создать AdminDonation.
+        Ожидаемые поля в body (JSON): user_id (int) | iin (str), blood_group (str), center_id (int), optional employee_id.
+        Если employee_id не передан — подставим из request.user.profile.employee_id (если есть) или request.user.id.
+        """
+        user = request.user
+        is_medic = getattr(getattr(user, "profile", None), "role", "") == "medic"
+        if not (is_medic or user.is_staff):
+            return Response({"detail": "Forbidden"}, status=403)
+
+        data = request.data or {}
+        user_id_raw = data.get('user_id') or None
+        iin = (data.get('iin') or "").strip() or None
+        blood_group = (data.get('blood_group') or "").strip() or None
+        center_raw = data.get('center_id') or data.get('center') or None
+
+        # Normalize ints
+        try:
+            user_id = int(user_id_raw) if user_id_raw not in (None, '', False) else None
+        except Exception:
+            return Response({"detail": "user_id must be integer"}, status=400)
+
+        try:
+            center_id = int(center_raw) if center_raw not in (None, '', False) else None
+        except Exception:
+            center_id = None
+
+        # employee_id fallback: request -> profile.employee_id -> user.id
+        employee_id = data.get('employee_id') or getattr(getattr(user, 'profile', None), 'employee_id', None) or getattr(user, 'id', None)
+
+        # validate minimal input
+        if not user_id and not iin:
+            return Response({"detail": "Provide user_id or iin"}, status=400)
+
+        # optional: validate user exists if user_id provided
+        if user_id:
+            if not User.objects.filter(id=user_id).exists():
+                return Response({"detail": "user_id not found"}, status=400)
+
+        payload = {
+            "user_id": user_id,
+            "iin": iin,
+            "blood_group": blood_group,
+            "center_id": center_id,
+            "employee_id": employee_id
+        }
+
+        try:
+            with transaction.atomic():
+                d = AdminDonation.objects.create(**payload)
+        except IntegrityError as ie:
+            logger.exception("IntegrityError creating AdminDonation: %s", ie)
+            # если DEBUG включён — вернуть подробности
+            if getattr(settings, "DEBUG", False):
+                return Response({"detail": "Database integrity error", "error": str(ie)}, status=400)
+            return Response({"detail": "Database integrity error"}, status=400)
+        except Exception as e:
+            tb = traceback.format_exc()
+            logger.exception("Unexpected error creating AdminDonation: %s", tb)
+            if getattr(settings, "DEBUG", False):
+                return Response({"detail": "Server error", "error": str(e), "trace": tb}, status=500)
+            return Response({"detail": "Server error"}, status=500)
+
+        return Response({
+            "admin_donation_id": getattr(d, "admin_donation_id", None),
+            "user_id": d.user_id,
+            "iin": d.iin,
+            "blood_group": d.blood_group,
+            "center_id": d.center_id,
+            "employee_id": d.employee_id
+        }, status=201)
 
 @api_view(['GET'])
 @permission_classes([IsMedicOrAdmin])
