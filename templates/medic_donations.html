@@ -7,6 +7,7 @@
 {# подключаем CSS в extra_head, как у тебя в base.html предусмотрено #}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'home.css' %}">
+<link rel="stylesheet" href="{% static 'medic-donations.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -78,23 +79,66 @@
 
     <main class="content">
       <!-- Новая содержательная часть для медиков: Донации -->
+      <!-- Внутри <main class="content">, вместо текущей формы -->
       <section class="medic-donations container">
-        <h1>Донации — панель медика</h1>
-        <p class="muted">Здесь вы увидите список сдач/донорских записей, фильтры и быстрые действия.</p>
+        <h1 class="red-title">Добавьте запись о донации!</h1>
 
-        <div class="donations-controls">
-          <input id="donorSearch" placeholder="Поиск по имени / IIN / телефону" />
-          <select id="centerFilter">
-            <option value="">Все центры</option>
-          </select>
-          <button id="refreshDonations">Обновить</button>
-        </div>
+        <div class="donation-form card">
+          <form id="donationForm" autocomplete="off">
+            {% csrf_token %}
+            <div class="row-field">
+              <label class="visually-hidden" for="centerSelect">Центр</label>
+              <select id="centerSelect" name="center_id" required>
+                <option value="">Выберите центр</option>
+              </select>
+            </div>
 
-        <div id="donationsList" class="donations-list">
-          <!-- JS заполнит карточки доноров -->
-          <div class="empty-note">Загрузка данных...</div>
+            <div class="row-field">
+              <label class="visually-hidden" for="donorSelect">Донор</label>
+              <select id="donorSelect" name="user_id" required>
+                <option value="">Выберите донора (ИИН)</option>
+              </select>
+            </div>
+
+            <div class="row-field">
+              <label class="visually-hidden" for="bloodSelect">Группа крови</label>
+              <select id="bloodSelect" name="blood_group" required>
+                <option value="">Группа крови</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+
+              <div class="row-field">
+                <label class="visually-hidden" for="donorNameSelect">Имя донора</label>
+                  <select id="donorNameSelect" name="donor_name">
+                  <option value="">Имя донора</option>
+                </select>
+              </div>
+
+              <div class="row-field">
+                <label class="visually-hidden" for="donorAddressSelect">Адрес</label>
+                <select id="donorAddressSelect" name="donor_address">
+                  <option value="">Адрес</option>
+                </select>
+              </div>
+
+
+            <div class="row-field">
+              <button id="saveDonation" class="btn-red" type="submit">Сохранить</button>
+            </div>
+
+            <div id="donationMsg" class="muted" style="margin-top:10px;"></div>
+          </form>
         </div>
       </section>
+
     </main>
 
     <footer class="footer">
@@ -120,37 +164,261 @@
 {# скрипты через блок extra_scripts (base их подставит внизу body) #}
 {% block extra_scripts %}
 <script defer src="{% static 'home.js' %}"></script>
-<script defer>
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('donationsList');
-  const btn = document.getElementById('refreshDonations');
 
-  async function load() {
-    list.innerHTML = '<div class="empty-note">Загрузка данных...</div>';
-    try {
-      const res = await fetch('/api/v1/medic/donations/');
-      const data = await res.json();
-      const items = Array.isArray(data) ? data : (data.results || []);
-      if (!items.length) {
-        list.innerHTML = '<div class="empty-note">Данные не найдены</div>';
-        return;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const centerSelect = document.getElementById('centerSelect');
+  const donorSelect = document.getElementById('donorSelect');
+  const donorNameSelect = document.getElementById('donorNameSelect');
+  const donorAddressSelect = document.getElementById('donorAddressSelect');
+  const form = document.getElementById('donationForm');
+  const msg = document.getElementById('donationMsg');
+
+  if (!form || !centerSelect || !donorSelect || !donorNameSelect || !donorAddressSelect || !msg) return;
+
+  // map user_id -> full donor object (для быстрого доступа)
+  const donorMap = new Map();
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim();
+        if (c.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(c.substring(name.length + 1));
+          break;
+        }
       }
-      list.innerHTML = '';
-      items.slice(0,50).forEach(u => {
-        const row = document.createElement('div');
-        row.className = 'donor-row';
-        row.innerHTML = `<div class="d-left"><strong>${u.first_name||u.username} ${u.last_name||''}</strong><div class="muted">${u.email||''}</div></div>
-                         <div class="d-right">${u.blood_group||''} · ${u.city||''}</div>`;
-        list.appendChild(row);
-      });
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  async function requestJson(url, opts = {}) {
+    try {
+      const res = await fetch(url, { credentials: 'same-origin', ...opts });
+      if (!res.ok) {
+        return { ok: false, status: res.status, json: null };
+      }
+      const json = await res.json();
+      return { ok: true, status: res.status, json };
     } catch (e) {
-      list.innerHTML = '<div class="empty-note">Ошибка загрузки</div>';
-      console.error(e);
+      console.warn('fetch error', url, e);
+      return { ok: false, status: 0, json: null };
     }
   }
 
-  if (btn) btn.addEventListener('click', load);
-  load();
+  // ---------------- loadCenters ----------------
+  async function loadCenters() {
+    const endpoints = ['/api/v1/medic/used-centers/', '/api/v1/legacy/centers/'];
+    let data = null;
+    for (const ep of endpoints) {
+      const r = await requestJson(ep, { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if (!r.ok) continue;
+      data = Array.isArray(r.json) ? r.json : (r.json.results || r.json || []);
+      if (data && data.length) break;
+    }
+
+    centerSelect.innerHTML = '<option value="">Выберите центр</option>';
+    if (!data || !data.length) return;
+
+    data.forEach(c => {
+      const opt = document.createElement('option');
+      const cid = c.center_id ?? c.id ?? c.pk ?? c.centerId ?? '';
+      opt.value = cid;
+      opt.textContent = c.center_name || c.name_ru || c.name || c.centerName || c.contact || `Центр ${cid}`;
+      centerSelect.appendChild(opt);
+    });
+  }
+
+  // ---------------- loadDonors ----------------
+  async function loadDonors() {
+    // пробуем legacy users (с именами/адресами) — если 403 или нет, пробуем donations fallback
+    const endpoints = ['/api/v1/legacy/users/?limit=200', '/api/v1/medic/donation-donors/'];
+    let data = null;
+
+    for (const ep of endpoints) {
+      const r = await requestJson(ep, { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if (!r.ok) continue;
+      data = Array.isArray(r.json) ? r.json : (r.json.results || r.json || []);
+      if (data) break;
+    }
+
+    donorSelect.innerHTML = '<option value="">Выберите донора (IIN / ID)</option>';
+    donorNameSelect.innerHTML = '<option value="">Имя донора</option>';
+    donorAddressSelect.innerHTML = '<option value="">Адрес донора</option>';
+    donorMap.clear();
+
+    if (!data || !data.length) return;
+
+    const seen = new Set();
+    data.forEach(u => {
+      const uid = u.user_id ?? u.id ?? u.pk ?? null;
+      if (!uid) return;
+      if (seen.has(uid)) return;
+      seen.add(uid);
+
+      // Сохраняем объект
+      donorMap.set(String(uid), u);
+
+      // --- option для donorSelect (IIN/phone/ID)
+      const opt = document.createElement('option');
+      opt.value = uid;
+      opt.dataset.firstName = u.first_name || "";
+      opt.dataset.lastName = u.last_name || "";
+      const iin = u.iin ?? u.IIN ?? '';
+      const phone = u.phone ?? u.mobile ?? '';
+      const name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim();
+      let label = '';
+      if (iin) label = `IIN: ${iin} · ID:${uid}`;
+      else if (phone) label = `${phone} · ID:${uid}`;
+      else if (name) label = `${name} · ID:${uid}`;
+      else label = `ID:${uid}`;
+      opt.textContent = label;
+      donorSelect.appendChild(opt);
+
+      // --- option для donorNameSelect (имя)
+      const nameOpt = document.createElement('option');
+      nameOpt.value = uid;
+      nameOpt.textContent = name || `ID:${uid}`;
+      donorNameSelect.appendChild(nameOpt);
+
+      // --- option для donorAddressSelect (адрес)
+      const addr = (u.address || u.city || u.contact || '').trim();
+      const addrOpt = document.createElement('option');
+      addrOpt.value = uid;
+      addrOpt.textContent = addr || `ID:${uid}`;
+      donorAddressSelect.appendChild(addrOpt);
+    });
+  }
+
+  // ---------------- синхронизация селектов ----------------
+  // Когда выбирают donorSelect (IIN), обновляем имя и адрес
+  donorSelect.addEventListener('change', () => {
+    const val = donorSelect.value;
+    if (!val) {
+      donorNameSelect.value = "";
+      donorAddressSelect.value = "";
+      return;
+    }
+    // если в donorNameSelect есть опция с таким value — выберем её
+    const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (nameOpt) donorNameSelect.value = val;
+    // и адрес
+    const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (addrOpt) donorAddressSelect.value = val;
+
+    // если name/address нет (редкий случай), попытаемся заполнить из donorMap
+    const d = donorMap.get(String(val));
+    if (d) {
+      const full = ((d.first_name || '') + ' ' + (d.last_name || '')).trim();
+      if (!nameOpt && full) {
+        const newN = document.createElement('option');
+        newN.value = val; newN.textContent = full;
+        donorNameSelect.appendChild(newN);
+        donorNameSelect.value = val;
+      }
+      const addressVal = (d.address || d.city || d.contact || '').trim();
+      if (!addrOpt && addressVal) {
+        const newA = document.createElement('option');
+        newA.value = val; newA.textContent = addressVal;
+        donorAddressSelect.appendChild(newA);
+        donorAddressSelect.value = val;
+      }
+    }
+  });
+
+  // Когда выбирают имя — синхронизируем основной селект (user_id)
+  donorNameSelect.addEventListener('change', () => {
+    const val = donorNameSelect.value;
+    if (!val) return;
+    const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (main) donorSelect.value = val;
+    // и синхронизируем адрес тоже
+    const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (addrOpt) donorAddressSelect.value = val;
+  });
+
+  // Когда выбирают адрес — синхронизируем основной и имя
+  donorAddressSelect.addEventListener('change', () => {
+    const val = donorAddressSelect.value;
+    if (!val) return;
+    const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (main) donorSelect.value = val;
+    const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+    if (nameOpt) donorNameSelect.value = val;
+  });
+
+  // ---------------- submit ----------------
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    msg.textContent = '';
+    msg.style.color = '';
+
+    const fd = new FormData(form);
+    const user_id_raw = fd.get('user_id') || null;
+    const center_id_raw = fd.get('center_id') || null;
+
+    const user_id = user_id_raw ? Number(user_id_raw) : null;
+    const center_id = center_id_raw ? Number(center_id_raw) : null;
+    const iin = (fd.get('iin') || '').trim() || null;
+    const blood_group = (fd.get('blood_group') || '').trim() || null;
+
+    if (!user_id && !iin) {
+      msg.textContent = 'Укажите донора (select) или введите IIN.';
+      msg.style.color = 'crimson';
+      return;
+    }
+
+    const payload = { user_id, iin, blood_group, center_id };
+
+    try {
+      const res = await fetch('/api/v1/medic/donations/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.status === 201) {
+        const created = await res.json();
+        msg.textContent = 'Запись успешно создана (ID: ' + created.admin_donation_id + ')';
+        msg.style.color = 'green';
+        form.reset();
+        // сброс селектов (после reset браузера может вернуть default option)
+        donorNameSelect.value = "";
+        donorAddressSelect.value = "";
+      } else if (res.status === 400) {
+        const j = await res.json().catch(()=>null);
+        msg.textContent = (j && (j.detail || JSON.stringify(j))) || 'Ошибка валидации (400)';
+        msg.style.color = 'crimson';
+      } else if (res.status === 403 || res.status === 401) {
+        msg.textContent = 'Доступ запрещён (проверьте роль пользователя).';
+        msg.style.color = 'crimson';
+      } else {
+        const text = await res.text().catch(()=>('status ' + res.status));
+        msg.textContent = 'Ошибка сервера: ' + res.status;
+        console.error('server response', res.status, text);
+        msg.style.color = 'crimson';
+      }
+    } catch (e) {
+      console.error('submit error', e);
+      msg.textContent = 'Ошибка сети при отправке';
+      msg.style.color = 'crimson';
+    }
+  });
+
+  // стартуем
+  loadCenters();
+  loadDonors();
 });
 </script>
+
+
 {% endblock %}
+

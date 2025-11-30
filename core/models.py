@@ -171,3 +171,14 @@ class Profile(models.Model):
     def __str__(self):
         return f"Profile({self.user.username})"
   
+class AdminDonation(models.Model):
+    admin_donation_id = models.AutoField(primary_key=True, db_column='admin_donation_id')
+    user_id = models.IntegerField(db_column='user_id', db_index=True)
+    iin = models.CharField(max_length=20, blank=True, null=True, db_column='iin')
+    blood_group = models.CharField(max_length=10, blank=True, null=True, db_column='blood_group')
+    center_id = models.IntegerField(blank=True, null=True, db_column='center_id')
+    employee_id = models.IntegerField(blank=True, null=True, db_column='employee_id')
+
+    class Meta:
+        db_table = "admin_donations"
+        managed = False  # таблица уже есть в базе  

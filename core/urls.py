@@ -8,6 +8,8 @@ from .views_medic import medic_home
 from .views_medic import medic_users, medic_donations
 from .views_medic import medic_export_users_csv
 from .views_medic import MedicLegacyUserListView
+from .views_medic import MedicDonationsList
+from .views_medic import medic_used_centers, medic_donation_donors
 
 urlpatterns = [
     # 🩺 Health check
@@ -51,7 +53,9 @@ urlpatterns = [
     path("about/", AboutSectionView.as_view(), name="about-section"),
     path("m/", mobile_home, name="mobile_home"),
     path("medic/users/", medic_users, name="medic-users"),
-    path("medic/donations/", medic_donations, name="medic-donations"),
+    path('medic/donations/', MedicDonationsList.as_view(), name='api-medic-donations'),
+    path('medic/donation-donors/', medic_donation_donors, name='medic-donation-donors'),
+    path('medic/used-centers/', medic_used_centers, name='medic-used-centers'),
     path("medic/legacy-users/export/csv/", medic_export_users_csv, name="medic-legacy-users-export-csv"),
     path("medic/legacy-users/", MedicLegacyUserListView.as_view(), name="medic-legacy-users"),
 ]
