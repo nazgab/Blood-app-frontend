@@ -44,18 +44,22 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # Если у вас используется локализация, раскомментируйте следующую строку:
-    # "django.middleware.locale.LocaleMiddleware",
+    # "django.middleware.locale.LocaleMiddleware",  # если нужно
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # Наш middleware должен идти после AuthenticationMiddleware,
-    # чтобы в нём был доступен request.user
+
+    # --- ваши кастомные ---
     "bloodsite.middleware.NoCacheForAuthenticatedMiddleware",
+    "core.middleware.RequireMedicRoleMiddleware",
+
+    # --- стандартные ---
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 
 ROOT_URLCONF = "bloodsite.urls"

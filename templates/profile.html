@@ -235,4 +235,138 @@
 </div>
 
 <script defer src="{% static 'home.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // область, в которой делаем локальную подмену
+  const scope = document.querySelector('.profile-page');
+  if (!scope) return;
+
+  // элементы, которые переведём
+  const backBtn = scope.querySelector('.back-btn');
+  const pageTitle = scope.querySelector('h2');
+  const cardHeaders = Array.from(scope.querySelectorAll('section.card > h3')); // [0] персональные, [1] контакты
+  const changePwdBtn = scope.querySelector('.btn-change-password');
+  const personalLabels = Array.from(scope.querySelectorAll('.personal-grid .pair > label'));
+  const contactLabels = Array.from(scope.querySelectorAll('.contact-grid label'));
+  const contactFormLabels = Array.from(scope.querySelectorAll('.contact-form label'));
+  const profileMenuLinks = Array.from(scope.querySelectorAll('#profilePopover .profile-menu .profile-link'));
+
+  // i18n словарь (пополни, если нужно)
+  const i18n = {
+    ru: {
+      back: 'Назад',
+      title: 'Личный кабинет',
+      personal_h3: 'Персональные данные',
+      contact_h3: 'Контактные данные',
+      change_password: 'Изменить пароль',
+      labels_personal: [
+        'Фамилия:', 'Отчество:', 'Вес:', 'Группа крови:',
+        'Имя:', 'ИИН:', 'Город:', 'Адрес:'
+      ],
+      labels_contact: ['Email:', 'Номер телефона:'],
+      contact_form_labels: ['Email', 'Номер телефона'],
+      profile_link_profile: 'Личный кабинет',
+      profile_link_logout: 'Выйти'
+    },
+    kk: {
+      back: 'Артқа',
+      title: 'Жеке кабинет',
+      personal_h3: 'Жеке деректер',
+      contact_h3: 'Байланыс деректері',
+      change_password: 'Құпия сөзді өзгерту',
+      labels_personal: [
+        'Тегі:', 'Әкесінің аты:', 'Салмақ:', 'Қан тобы:',
+        'Аты:', 'ЖСН:', 'Қала:', 'Мекен-жайы:'
+      ],
+      labels_contact: ['Электрондық пошта:', 'Телефон нөмірі:'],
+      contact_form_labels: ['Email', 'Телефон нөмірі'],
+      profile_link_profile: 'Жеке кабинет',
+      profile_link_logout: 'Шығу'
+    },
+    en: {
+      back: 'Back',
+      title: 'Profile',
+      personal_h3: 'Personal data',
+      contact_h3: 'Contact details',
+      change_password: 'Change password',
+      labels_personal: [
+        'Last name:', 'Middle name:', 'Weight:', 'Blood group:',
+        'First name:', 'IIN:', 'City:', 'Address:'
+      ],
+      labels_contact: ['Email:', 'Phone number:'],
+      contact_form_labels: ['Email', 'Phone number'],
+      profile_link_profile: 'Profile',
+      profile_link_logout: 'Logout'
+    }
+  };
+
+  function applyLocale(lang) {
+    const dict = i18n[lang] || i18n.ru;
+
+    // back button — сохраним svg, заменим текст
+    if (backBtn) {
+      const svg = backBtn.querySelector('svg') ? backBtn.querySelector('svg').outerHTML : '';
+      backBtn.innerHTML = svg + ' ' + dict.back;
+    }
+
+    if (pageTitle) pageTitle.textContent = dict.title || '';
+    if (cardHeaders[0]) cardHeaders[0].textContent = dict.personal_h3 || '';
+    if (cardHeaders[1]) cardHeaders[1].textContent = dict.contact_h3 || '';
+    if (changePwdBtn) changePwdBtn.textContent = dict.change_password || '';
+
+    // персональные метки (по порядку)
+    if (personalLabels && personalLabels.length && dict.labels_personal) {
+      for (let i = 0; i < personalLabels.length; i++) {
+        if (dict.labels_personal[i]) personalLabels[i].textContent = dict.labels_personal[i];
+      }
+    }
+
+    // контактные метки (в секции просмотра)
+    if (contactLabels && contactLabels.length && dict.labels_contact) {
+      for (let i = 0; i < contactLabels.length; i++) {
+        if (dict.labels_contact[i]) contactLabels[i].textContent = dict.labels_contact[i];
+      }
+    }
+
+    // контактная форма (если есть)
+    if (contactFormLabels && contactFormLabels.length && dict.contact_form_labels) {
+      for (let i = 0; i < contactFormLabels.length; i++) {
+        if (dict.contact_form_labels[i]) contactFormLabels[i].textContent = dict.contact_form_labels[i];
+      }
+    }
+
+    // profile popover links (если поповер открыт, он будет перестроен при открытии, но подстраховка)
+    if (profileMenuLinks && profileMenuLinks.length) {
+      profileMenuLinks.forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.includes('logout')) {
+          a.textContent = dict.profile_link_logout || a.textContent;
+        } else {
+          a.textContent = dict.profile_link_profile || a.textContent;
+        }
+      });
+    }
+  }
+
+  // Привязка к кнопкам языка в шапке (добавляем дополнительный handler, не трогаем глобальных слушателей)
+  const headerBtns = document.querySelectorAll('.lang-link');
+  headerBtns.forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      const lang = btn.dataset.lang || 'ru';
+      // визуальная отметка (локально)
+      headerBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // применяем только в этом scope
+      applyLocale(lang);
+      // НЕ трогаем cookie / document.documentElement.lang / глобальную локализацию
+    });
+  });
+
+  // При первой загрузке применим язык активной кнопки или ru
+  const activeBtn = Array.from(headerBtns).find(b => b.classList.contains('active')) || headerBtns[1] || headerBtns[0];
+  const defaultLang = activeBtn ? (activeBtn.dataset.lang || 'ru') : 'ru';
+  applyLocale(defaultLang);
+});
+</script>
+
 {% endblock %}

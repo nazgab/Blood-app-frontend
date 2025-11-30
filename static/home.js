@@ -14,18 +14,23 @@ const api = async (p) => {
 };
 
 function buildMedicMenu(pop) {
+  // используем t() или pick для локализации
+  const usersText = t('profile') === undefined ? (lang === 'kk' ? 'Пайдаланушылар' : lang === 'en' ? 'Users' : 'Пользователи') : (lang === 'kk' ? 'Пайдаланушылар' : lang === 'en' ? 'Users' : 'Пользователи');
+  const donationsText = (lang === 'kk') ? 'Донациялар' : (lang === 'en') ? 'Donations' : 'Донации';
+
   pop.innerHTML = `
     <nav class="medic-menu">
       <ul>
-        <li class="group-title">Пользователи</li>
-        <li class="menu-item"><a href="/admin/?app_label=core&model=profile">Пользователи</a></li>
+        <li class="group-title">${usersText}</li>
+        <li class="menu-item"><a href="/admin/?app_label=core&model=profile">${usersText}</a></li>
 
-        <li class="group-title">Донации</li>
-        <li class="menu-item"><a href="/admin/donations/">Донации</a></li>
+        <li class="group-title">${donationsText}</li>
+        <li class="menu-item"><a href="/admin/donations/">${donationsText}</a></li>
       </ul>
     </nav>
   `.trim();
 }
+
 
 // --- popover utils ---
 function $id(id) { return document.getElementById(id); }
@@ -67,7 +72,9 @@ const pick = (o, kk, ru, en) => {
 // i18n для профиля
 const i18n = {
   profile: { kk: 'Жеке кабинет', ru: 'Личный кабинет', en: 'Account' },
-  logout:  { kk: 'Шығу',         ru: 'Выйти',          en: 'Log out' }
+  logout:  { kk: 'Шығу',         ru: 'Выйти',          en: 'Log out' },
+  menu_users:     { kk: 'Пайдаланушылар', ru: 'Пользователи', en: 'Users' },
+  menu_donations: { kk: 'Донациялар',     ru: 'Донации',      en: 'Donations' }
 };
 
 const t = (key) => (i18n[key]?.[lang]) || i18n[key]?.ru || key;
@@ -158,10 +165,13 @@ async function loadMenu() {
   const role = document.body.dataset.role || 'user';
 
   if (role === 'medic') {
-    // простое медик-меню — ровно два пункта
+  // локализованные подписи
+    const titleUsers = (lang === 'kk') ? 'Пайдаланушылар' : (lang === 'en') ? 'Users' : 'Пользователи';
+    const titleDon = (lang === 'kk') ? 'Донациялар' : (lang === 'en') ? 'Donations' : 'Донации';
+
     const items = [
-      { href: '/medic/users/', title: 'Пользователи' },
-      { href: '/medic/donations/', title: 'Донации' }
+      { href: '/medic/users/', title: titleUsers },
+      { href: '/medic/donations/', title: titleDon }
     ];
     items.forEach(item => {
       const a = document.createElement('a');
@@ -172,6 +182,7 @@ async function loadMenu() {
     });
     return;
   }
+
   if (document.body.dataset.role === 'medic') {
     pop.innerHTML = `
       <a class="menu-item" href="/medic/users/">Пользователи</a>
@@ -280,13 +291,15 @@ function bindLang() {
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       lang = btn.dataset.lang || 'kk';
-      refresh();
-
-      // если профильный попап открыт — перестроим его с новыми подписями
-      const profilePop = document.getElementById('profilePopover');
-      if (profilePop && !profilePop.classList.contains('hidden')) {
-        buildProfilePopover();
-      }
+      refresh().then(()=> {
+        // после refresh пересоберём меню popover, чтобы пункты обновились
+        loadMenu().catch(()=>{});
+        // если профильный попап открыт — перестроим его
+        const profilePop = document.getElementById('profilePopover');
+        if (profilePop && !profilePop.classList.contains('hidden')) {
+          buildProfilePopover();
+        }
+      }).catch(()=>{});
     });
   });
 

@@ -4,14 +4,12 @@
 
 {% block title %}Донации — BloodSeeker{% endblock %}
 
-{# подключаем CSS в extra_head, как у тебя в base.html предусмотрено #}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <link rel="stylesheet" href="{% static 'medic-donations.css' %}">
 {% endblock %}
 
 {% block content %}
-  <!-- Боковая колонка и бургер (как в home) -->
   <aside class="side">
     <div class="side-top">
       <a class="logo" href="/">
@@ -26,7 +24,6 @@
   <div id="menuPopover" class="menu-popover hidden"></div>
   <div id="menuBackdrop" class="menu-backdrop hidden"></div>
 
-  <!-- data-role переносим сюда (на .page), чтобы CSS/JS работали как в home -->
   <div class="page" data-role="{% if is_medic %}medic{% else %}user{% endif %}">
     <header class="topbar">
       <div class="welcome" id="welcomeText">
@@ -41,7 +38,7 @@
         <div class="langs" id="langBar">
           <button class="lang-link" data-lang="kk">KK</button>
           <span class="sep">|</span>
-          <button class="lang-link" data-lang="ru">RU</button>
+          <button class="lang-link active" data-lang="ru">RU</button>
           <span class="sep">|</span>
           <button class="lang-link" data-lang="en">EN</button>
         </div>
@@ -69,8 +66,8 @@
           </div>
           <hr>
           <nav class="profile-menu">
-            <a href="/profile/" class="profile-link">Жеке кабинет</a>
-            <a href="{% url 'logout' %}?next=/" class="profile-link danger">Шығу</a>
+            <a href="/profile/" class="profile-link" data-i18n="profile_cabinet">Жеке кабинет</a>
+            <a href="{% url 'logout' %}?next=/" class="profile-link danger" data-i18n="profile_logout">Шығу</a>
           </nav>
         </div>
       </div>
@@ -78,79 +75,77 @@
     {% endif %}
 
     <main class="content">
-      <!-- Новая содержательная часть для медиков: Донации -->
-      <!-- Внутри <main class="content">, вместо текущей формы -->
       <section class="medic-donations container">
-        <h1 class="red-title">Добавьте запись о донации!</h1>
+        <h1 class="red-title" data-i18n="page_title">Добавьте запись о донации!</h1>
 
         <div class="donation-form card">
           <form id="donationForm" autocomplete="off">
             {% csrf_token %}
+
             <div class="row-field">
-              <label class="visually-hidden" for="centerSelect">Центр</label>
-              <select id="centerSelect" name="center_id" required>
+              <label class="visually-hidden" for="centerSelect" data-i18n="label_center">Центр</label>
+              <select id="centerSelect" name="center_id" required data-i18n-select="center_placeholder">
                 <option value="">Выберите центр</option>
               </select>
             </div>
 
             <div class="row-field">
-              <label class="visually-hidden" for="donorSelect">Донор</label>
-              <select id="donorSelect" name="user_id" required>
+              <label class="visually-hidden" for="donorSelect" data-i18n="label_donor">Донор</label>
+              <select id="donorSelect" name="user_id" required data-i18n-select="donor_placeholder">
                 <option value="">Выберите донора (ИИН)</option>
               </select>
             </div>
 
             <div class="row-field">
-              <label class="visually-hidden" for="bloodSelect">Группа крови</label>
+              <label class="visually-hidden" for="bloodSelect" data-i18n="label_blood">Группа крови</label>
               <select id="bloodSelect" name="blood_group" required>
-                <option value="">Группа крови</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
+                <!-- first option translated by JS -->
+                <option value="" data-i18n-option="blood_placeholder">Группа крови</option>
+                <option value="A+" data-i18n-option="A+">A+</option>
+                <option value="A-" data-i18n-option="A-">A-</option>
+                <option value="B+" data-i18n-option="B+">B+</option>
+                <option value="B-" data-i18n-option="B-">B-</option>
+                <option value="AB+" data-i18n-option="AB+">AB+</option>
+                <option value="AB-" data-i18n-option="AB-">AB-</option>
+                <option value="O+" data-i18n-option="O+">O+</option>
+                <option value="O-" data-i18n-option="O-">O-</option>
+              </select>
+            </div>
+            
+            <div class="row-field">
+              <label class="visually-hidden" for="donorNameSelect">Имя донора</label>
+              <select id="donorNameSelect" name="donor_name" data-i18n-select="name_placeholder">
+                <option value="">Имя донора</option>
               </select>
             </div>
 
-              <div class="row-field">
-                <label class="visually-hidden" for="donorNameSelect">Имя донора</label>
-                  <select id="donorNameSelect" name="donor_name">
-                  <option value="">Имя донора</option>
-                </select>
-              </div>
-
-              <div class="row-field">
-                <label class="visually-hidden" for="donorAddressSelect">Адрес</label>
-                <select id="donorAddressSelect" name="donor_address">
-                  <option value="">Адрес</option>
-                </select>
-              </div>
-
+            <div class="row-field">
+              <label class="visually-hidden" for="donorAddressSelect">Адрес</label>
+              <select id="donorAddressSelect" name="donor_address" data-i18n-select="address_placeholder">
+                <option value="">Адрес</option>
+              </select>
+            </div>
 
             <div class="row-field">
-              <button id="saveDonation" class="btn-red" type="submit">Сохранить</button>
+              <button id="saveDonation" class="btn-red" type="submit" data-i18n="btn_save">Сохранить</button>
             </div>
 
             <div id="donationMsg" class="muted" style="margin-top:10px;"></div>
           </form>
         </div>
       </section>
-
     </main>
 
     <footer class="footer">
       <div class="footer-inner">
         <div class="footer-cards">
           <div class="footer-card">
-            <div class="footer-title" id="contactTitle">Контакты</div>
+            <div class="footer-title" id="contactTitle" data-i18n="footer_contacts">Контакты</div>
             <div class="footer-sub" id="contactPhone"></div>
           </div>
 
           <div class="footer-card">
-            <div class="footer-title" id="emailTitle">Email</div>
+            <div class="footer-title" id="emailTitle" data-i18n="footer_email">Email</div>
             <div class="footer-sub" id="contactEmail"></div>
           </div>
         </div>
@@ -161,12 +156,13 @@
   </div>
 {% endblock %}
 
-{# скрипты через блок extra_scripts (base их подставит внизу body) #}
+
 {% block extra_scripts %}
 <script defer src="{% static 'home.js' %}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // DOM ссылки
   const centerSelect = document.getElementById('centerSelect');
   const donorSelect = document.getElementById('donorSelect');
   const donorNameSelect = document.getElementById('donorNameSelect');
@@ -174,11 +170,106 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('donationForm');
   const msg = document.getElementById('donationMsg');
 
-  if (!form || !centerSelect || !donorSelect || !donorNameSelect || !donorAddressSelect || !msg) return;
+  if (!form) return;
 
-  // map user_id -> full donor object (для быстрого доступа)
-  const donorMap = new Map();
+  // scope — только секция с донациями (локальная замена текста)
+  const scope = document.querySelector('section.medic-donations');
+  if (!scope) return;
 
+  // ---------- I18N (локально, только в пределах scope) ----------
+  const i18n = {
+    ru: {
+      page_title: "Добавьте запись о донации!",
+      center_placeholder: "Выберите центр",
+      donor_placeholder: "Выберите донора (IIN / ID)",
+      blood_placeholder: "Группа крови",
+      name_placeholder: "Имя донора",
+      address_placeholder: "Адрес донора",
+      btn_save: "Сохранить",
+      footer_contacts: "Контакты",
+      footer_email: "Email",
+      profile_cabinet: "Жеке кабинет",
+      profile_logout: "Шығу"
+    },
+    kk: {
+      page_title: "Донация туралы жазбаны қосыңыз!",
+      center_placeholder: "Орталықты таңдаңыз",
+      donor_placeholder: "Донорды таңдаңыз (ЖСН / ID)",
+      blood_placeholder: "Қан тобы",
+      name_placeholder: "Донордың аты",
+      address_placeholder: "Донордың мекен-жайы",
+      btn_save: "Сақтау",
+      footer_contacts: "Байланыс",
+      footer_email: "Электрондық пошта",
+      profile_cabinet: "Жеке кабинет",
+      profile_logout: "Шығу"
+    },
+    en: {
+      page_title: "Add a donation record!",
+      center_placeholder: "Choose center",
+      donor_placeholder: "Choose donor (IIN / ID)",
+      blood_placeholder: "Blood group",
+      name_placeholder: "Donor name",
+      address_placeholder: "Donor address",
+      btn_save: "Save",
+      footer_contacts: "Contacts",
+      footer_email: "Email",
+      profile_cabinet: "Profile",
+      profile_logout: "Logout"
+    }
+  };
+
+  function applyI18nInScope(lang) {
+    const dict = i18n[lang] || i18n.ru;
+
+    // элементы с data-i18n -> textContent
+    scope.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key && dict[key]) el.textContent = dict[key];
+    });
+
+    // селекты, у которых data-i18n-select: заменить текст первой option
+    scope.querySelectorAll('[data-i18n-select]').forEach(sel => {
+      const key = sel.getAttribute('data-i18n-select');
+      const placeholder = dict[key] || "";
+      if (sel.options && sel.options.length) {
+        sel.options[0].textContent = placeholder;
+      } else {
+        sel.innerHTML = `<option value="">${placeholder}</option>`;
+      }
+    });
+
+    // опции, помеченные data-i18n-option (например "Группа крови")
+    scope.querySelectorAll('[data-i18n-option]').forEach(opt => {
+      const key = opt.getAttribute('data-i18n-option');
+      if (key && dict[key]) opt.textContent = dict[key];
+    });
+
+    // placeholder у input (если использованы data-i18n-placeholder)
+    scope.querySelectorAll('[data-i18n-placeholder]').forEach(inp => {
+      const key = inp.getAttribute('data-i18n-placeholder');
+      if (key && dict[key]) inp.placeholder = dict[key];
+    });
+  }
+
+  // Подключаем переключение языка только для этой страницы
+  const headerLangButtons = document.querySelectorAll('.lang-link');
+  headerLangButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const lang = btn.dataset.lang || 'ru';
+      // обозначим активную визуально в header (как у вас)
+      headerLangButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // применим локально (не трогаем куки/документ)
+      applyI18nInScope(lang);
+    });
+  });
+
+  // При загрузке применить язык из активной кнопки (или ru)
+  const initialBtn = Array.from(headerLangButtons).find(b => b.classList.contains('active')) || headerLangButtons[0];
+  applyI18nInScope(initialBtn ? (initialBtn.dataset.lang || 'ru') : 'ru');
+
+  // ---------- утилиты CSRF + requestJson ----------
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -198,9 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function requestJson(url, opts = {}) {
     try {
       const res = await fetch(url, { credentials: 'same-origin', ...opts });
-      if (!res.ok) {
-        return { ok: false, status: res.status, json: null };
-      }
+      if (!res.ok) return { ok: false, status: res.status, json: null };
       const json = await res.json();
       return { ok: true, status: res.status, json };
     } catch (e) {
@@ -209,8 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ---------------- loadCenters ----------------
+  // ---------- загрузка центров ----------
   async function loadCenters() {
+    if (!centerSelect) return;
     const endpoints = ['/api/v1/medic/used-centers/', '/api/v1/legacy/centers/'];
     let data = null;
     for (const ep of endpoints) {
@@ -232,12 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---------------- loadDonors ----------------
+  // ---------- загрузка доноров (и имя/адрес) ----------
+  const donorMap = new Map(); // user_id -> объект
   async function loadDonors() {
-    // пробуем legacy users (с именами/адресами) — если 403 или нет, пробуем donations fallback
+    if (!donorSelect) return;
     const endpoints = ['/api/v1/legacy/users/?limit=200', '/api/v1/medic/donation-donors/'];
     let data = null;
-
     for (const ep of endpoints) {
       const r = await requestJson(ep, { method: 'GET', headers: { 'Accept': 'application/json' } });
       if (!r.ok) continue;
@@ -246,8 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     donorSelect.innerHTML = '<option value="">Выберите донора (IIN / ID)</option>';
-    donorNameSelect.innerHTML = '<option value="">Имя донора</option>';
-    donorAddressSelect.innerHTML = '<option value="">Адрес донора</option>';
+    if (donorNameSelect) donorNameSelect.innerHTML = '<option value="">Имя донора</option>';
+    if (donorAddressSelect) donorAddressSelect.innerHTML = '<option value="">Адрес донора</option>';
     donorMap.clear();
 
     if (!data || !data.length) return;
@@ -259,10 +349,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (seen.has(uid)) return;
       seen.add(uid);
 
-      // Сохраняем объект
       donorMap.set(String(uid), u);
 
-      // --- option для donorSelect (IIN/phone/ID)
+      // option для основного селекта (IIN/phone/ID)
       const opt = document.createElement('option');
       opt.value = uid;
       opt.dataset.firstName = u.first_name || "";
@@ -278,86 +367,95 @@ document.addEventListener('DOMContentLoaded', () => {
       opt.textContent = label;
       donorSelect.appendChild(opt);
 
-      // --- option для donorNameSelect (имя)
-      const nameOpt = document.createElement('option');
-      nameOpt.value = uid;
-      nameOpt.textContent = name || `ID:${uid}`;
-      donorNameSelect.appendChild(nameOpt);
+      // имя
+      if (donorNameSelect) {
+        const nameOpt = document.createElement('option');
+        nameOpt.value = uid;
+        nameOpt.textContent = name || `ID:${uid}`;
+        donorNameSelect.appendChild(nameOpt);
+      }
 
-      // --- option для donorAddressSelect (адрес)
-      const addr = (u.address || u.city || u.contact || '').trim();
-      const addrOpt = document.createElement('option');
-      addrOpt.value = uid;
-      addrOpt.textContent = addr || `ID:${uid}`;
-      donorAddressSelect.appendChild(addrOpt);
+      // адрес
+      if (donorAddressSelect) {
+        const addr = (u.address || u.city || u.contact || '').trim();
+        const addrOpt = document.createElement('option');
+        addrOpt.value = uid;
+        addrOpt.textContent = addr || `ID:${uid}`;
+        donorAddressSelect.appendChild(addrOpt);
+      }
     });
   }
 
-  // ---------------- синхронизация селектов ----------------
-  // Когда выбирают donorSelect (IIN), обновляем имя и адрес
-  donorSelect.addEventListener('change', () => {
-    const val = donorSelect.value;
-    if (!val) {
-      donorNameSelect.value = "";
-      donorAddressSelect.value = "";
-      return;
-    }
-    // если в donorNameSelect есть опция с таким value — выберем её
-    const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (nameOpt) donorNameSelect.value = val;
-    // и адрес
-    const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (addrOpt) donorAddressSelect.value = val;
-
-    // если name/address нет (редкий случай), попытаемся заполнить из donorMap
-    const d = donorMap.get(String(val));
-    if (d) {
-      const full = ((d.first_name || '') + ' ' + (d.last_name || '')).trim();
-      if (!nameOpt && full) {
-        const newN = document.createElement('option');
-        newN.value = val; newN.textContent = full;
-        donorNameSelect.appendChild(newN);
-        donorNameSelect.value = val;
+  // ---------- синхронизация селектов ----------
+  if (donorSelect) {
+    donorSelect.addEventListener('change', () => {
+      const val = donorSelect.value;
+      if (!val) {
+        if (donorNameSelect) donorNameSelect.value = "";
+        if (donorAddressSelect) donorAddressSelect.value = "";
+        return;
       }
-      const addressVal = (d.address || d.city || d.contact || '').trim();
-      if (!addrOpt && addressVal) {
-        const newA = document.createElement('option');
-        newA.value = val; newA.textContent = addressVal;
-        donorAddressSelect.appendChild(newA);
-        donorAddressSelect.value = val;
+      if (donorNameSelect) {
+        const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+        if (nameOpt) donorNameSelect.value = val;
       }
-    }
-  });
+      if (donorAddressSelect) {
+        const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+        if (addrOpt) donorAddressSelect.value = val;
+      }
+      const d = donorMap.get(String(val));
+      if (d) {
+        const full = ((d.first_name || '') + ' ' + (d.last_name || '')).trim();
+        if (donorNameSelect && !donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`) && full) {
+          const newN = document.createElement('option');
+          newN.value = val; newN.textContent = full;
+          donorNameSelect.appendChild(newN);
+          donorNameSelect.value = val;
+        }
+        const addressVal = (d.address || d.city || d.contact || '').trim();
+        if (donorAddressSelect && !donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`) && addressVal) {
+          const newA = document.createElement('option');
+          newA.value = val; newA.textContent = addressVal;
+          donorAddressSelect.appendChild(newA);
+          donorAddressSelect.value = val;
+        }
+      }
+    });
+  }
 
-  // Когда выбирают имя — синхронизируем основной селект (user_id)
-  donorNameSelect.addEventListener('change', () => {
-    const val = donorNameSelect.value;
-    if (!val) return;
-    const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (main) donorSelect.value = val;
-    // и синхронизируем адрес тоже
-    const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (addrOpt) donorAddressSelect.value = val;
-  });
+  if (donorNameSelect) {
+    donorNameSelect.addEventListener('change', () => {
+      const val = donorNameSelect.value;
+      if (!val) return;
+      const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+      if (main) donorSelect.value = val;
+      if (donorAddressSelect) {
+        const addrOpt = donorAddressSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+        if (addrOpt) donorAddressSelect.value = val;
+      }
+    });
+  }
 
-  // Когда выбирают адрес — синхронизируем основной и имя
-  donorAddressSelect.addEventListener('change', () => {
-    const val = donorAddressSelect.value;
-    if (!val) return;
-    const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (main) donorSelect.value = val;
-    const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
-    if (nameOpt) donorNameSelect.value = val;
-  });
+  if (donorAddressSelect) {
+    donorAddressSelect.addEventListener('change', () => {
+      const val = donorAddressSelect.value;
+      if (!val) return;
+      const main = donorSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+      if (main) donorSelect.value = val;
+      if (donorNameSelect) {
+        const nameOpt = donorNameSelect.querySelector(`option[value="${CSS.escape(val)}"]`);
+        if (nameOpt) donorNameSelect.value = val;
+      }
+    });
+  }
 
-  // ---------------- submit ----------------
+  // ---------- submit формы ----------
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    msg.textContent = '';
-    msg.style.color = '';
+    msg.textContent = ''; msg.style.color = '';
 
     const fd = new FormData(form);
-    const user_id_raw = fd.get('user_id') || null;
+    const user_id_raw = fd.get('user_id') || fd.get('user') || fd.get('donor') || fd.get('user_id'); // defensive
     const center_id_raw = fd.get('center_id') || null;
 
     const user_id = user_id_raw ? Number(user_id_raw) : null;
@@ -387,12 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.status === 201) {
         const created = await res.json();
-        msg.textContent = 'Запись успешно создана (ID: ' + created.admin_donation_id + ')';
+        msg.textContent = 'Запись успешно создана (ID: ' + (created.admin_donation_id || created.id || '') + ')';
         msg.style.color = 'green';
         form.reset();
-        // сброс селектов (после reset браузера может вернуть default option)
-        donorNameSelect.value = "";
-        donorAddressSelect.value = "";
+        if (donorNameSelect) donorNameSelect.value = "";
+        if (donorAddressSelect) donorAddressSelect.value = "";
       } else if (res.status === 400) {
         const j = await res.json().catch(()=>null);
         msg.textContent = (j && (j.detail || JSON.stringify(j))) || 'Ошибка валидации (400)';
@@ -413,11 +510,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // стартуем
+  // старт: загрузка данных
   loadCenters();
   loadDonors();
 });
 </script>
+
 
 
 {% endblock %}

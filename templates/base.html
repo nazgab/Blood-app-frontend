@@ -10,12 +10,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <!-- подключить мобильные стили, браузер применит только при ширине <= 720px -->
-<link rel="stylesheet" href="{% static 'mobile_home.css' %}" media="(max-width: 720px)">
+  <link rel="stylesheet" href="{% static 'mobile_home.css' %}" media="(max-width: 720px)">
 
   {# ОБЯЗАТЕЛЬНО: этот блок позволит подсовывать auth.css из дочерних шаблонов #}
   {% block extra_head %}{% endblock %}
 </head>
-<body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
+<body data-role="{% if request.user.is_authenticated and request.user.profile.role == 'medic' %}medic{% else %}user{% endif %}">
   {% block content %}{% endblock %}
   {% block extra_scripts %}{% endblock %}
 </body>

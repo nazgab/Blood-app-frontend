@@ -13,6 +13,8 @@ from .models import AdminDonation
 from .serializers import DonationSerializer
 from .permissions import IsMedicOrAdmin
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+
 # legacy imports (optional)
 from .legacy_models import LegacyUser
 try:
@@ -20,6 +22,11 @@ try:
 except Exception:
     LegacyUserSerializer = None
 
+class MedicLegacyPagination(PageNumberPagination):
+    # по умолчанию пусть сервер возвращает крупные блоки, чтобы фронт мог брать больше сразу
+    page_size = 1000                 # значение по умолчанию при отсутствии ?page_size=
+    page_size_query_param = 'page_size'  # позволяет клиенту указывать ?page_size=...
+    max_page_size = 10000            # максимум, который клиент может запросить
 
 @login_required
 def medic_home(request):
@@ -42,6 +49,7 @@ def medic_donations(request):
 class MedicLegacyUserListView(generics.ListAPIView):
     serializer_class = LegacyUserSerializer if LegacyUserSerializer is not None else None
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = MedicLegacyPagination
 
     def get_queryset(self):
         user = self.request.user

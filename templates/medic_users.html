@@ -1,3 +1,4 @@
+{# templates/medic_users.html - обновлённый #}
 {% extends "base.html" %}
 {% load static %}
 
@@ -6,7 +7,7 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <style>
-/* Таблица */
+/* (стили остались без изменений) */
 .medic-table { 
   width:100%; 
   border-collapse:collapse; 
@@ -30,106 +31,19 @@
 .medic-table tbody tr:hover {
   background: #fafafa;
 }
-
-/* Контролы */
-.medic-controls { 
-  display:flex; 
-  gap:8px; 
-  align-items:center; 
-  margin:12px 0;
-  flex-wrap: wrap;
-}
-
-/* Кнопки */
-.btn { 
-  background:#e53935; 
-  color:#fff; 
-  padding:10px 16px; 
-  border-radius:6px; 
-  border:none; 
-  cursor:pointer;
-  font-family: Poppins, sans-serif;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-.btn:hover {
-  background: #d32f2f;
-  transform: translateY(-1px);
-}
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-.btn.ghost { 
-  background:#fff; 
-  color:#333; 
-  border:1px solid #ccc; 
-}
-.btn.ghost:hover {
-  background: #f5f5f5;
-  border-color: #999;
-}
-.btn.ghost:disabled {
-  background: #fff;
-  color: #999;
-  border-color: #e0e0e0;
-}
-
-/* Пагинация */
-#paginationBox {
-  margin-top: 24px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-#paginationBox button {
-  min-width: 40px;
-  height: 40px;
-  padding: 8px 12px;
-  font-size: 14px;
-}
-
-#paginationBox .page-info {
-  margin-left: 16px;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.small-muted { 
-  color:#666; 
-  font-size:0.95rem; 
-}
-
-/* Инпуты */
-.filter-input {
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-family: Poppins, sans-serif;
-  min-width: 200px;
-  transition: border-color 0.2s;
-}
-.filter-input:focus {
-  outline: none;
-  border-color: #e53935;
-}
-
-/* Загрузка */
-.loading-row {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-  font-size: 16px;
-}
+.medic-controls { display:flex; gap:8px; align-items:center; margin:12px 0; flex-wrap: wrap; }
+.btn { background:#e53935; color:#fff; padding:10px 16px; border-radius:6px; border:none; cursor:pointer; font-family: Poppins, sans-serif; font-weight: 500; transition: all 0.2s; }
+.btn:hover { background: #d32f2f; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn.ghost { background:#fff; color:#333; border:1px solid #ccc; }
+.btn.ghost:hover { background: #f5f5f5; border-color: #999; }
+#paginationBox { margin-top: 24px; display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+#paginationBox button { min-width: 40px; height: 40px; padding: 8px 12px; font-size: 14px; }
+#paginationBox .page-info { margin-left: 16px; color: #666; font-size: 14px; font-weight: 500; }
+.small-muted { color:#666; font-size:0.95rem; }
+.filter-input { padding: 10px 14px; border-radius: 6px; border: 1px solid #ccc; font-family: Poppins, sans-serif; min-width: 200px; transition: border-color 0.2s; }
+.filter-input:focus { outline: none; border-color: #e53935; }
+.loading-row { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
 </style>
 {% endblock %}
 
@@ -153,7 +67,7 @@
         <div class="langs" id="langBar">
           <button class="lang-link" data-lang="kk">KK</button>
           <span class="sep">|</span>
-          <button class="lang-link" data-lang="ru">RU</button>
+          <button class="lang-link active" data-lang="ru">RU</button>
           <span class="sep">|</span>
           <button class="lang-link" data-lang="en">EN</button>
         </div>
@@ -164,30 +78,51 @@
       </div>
     </header>
 
+    {% if user.is_authenticated %}
+      <div id="profilePopover" class="profile-popover hidden">
+        <div class="profile-card">
+          <div class="profile-row">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="">
+            <div>
+              <div class="name">{{ user.get_full_name|default:user.username }}</div>
+              <div class="muted">{{ user.email }}</div>
+            </div>
+          </div>
+          <hr>
+          <nav class="profile-menu">
+            <a href="/profile/" class="profile-link" data-i18n="profile_cabinet">Личный кабинет</a>
+            <a href="{% url 'logout' %}?next=/" class="profile-link danger" data-i18n="profile_logout">Выйти</a>
+          </nav>
+        </div>
+      </div>
+      <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+    {% endif %}
+
     <main class="content container">
-      <h1>Пользователи — панель медика</h1>
+      <h1 data-i18n="page_title">Пользователи — панель медика</h1>
       <p class="small-muted"></p>
 
       <div class="medic-controls">
         <input 
           id="searchInput" 
           class="filter-input"
-          placeholder="Поиск: имя / IIN / email" 
+          placeholder="Поиск: имя / IIN / email"
+          data-i18n-placeholder="search_placeholder"
           style="min-width:320px">
         
-        <select id="filterBlood" class="filter-input">
+        <select id="filterBlood" class="filter-input" data-i18n-select="filter_blood">
           <option value="">Все группы крови</option>
         </select>
         
-        <select id="filterCity" class="filter-input">
+        <select id="filterCity" class="filter-input" data-i18n-select="filter_city">
           <option value="">Все города</option>
         </select>
         
-        <button id="btnRefresh" class="btn ghost">🔄 Обновить</button>
+        <button id="btnRefresh" class="btn ghost" data-i18n="btn_refresh">🔄 Обновить</button>
         
         <div style="margin-left:auto; display:flex; gap:8px;">
-          <button id="btnExportCsv" class="btn">📊 Export CSV</button>
-          <button id="btnExportXls" class="btn ghost">📈 Export Excel</button>
+          <button id="btnExportCsv" class="btn" data-i18n="btn_export_csv">📊 Export CSV</button>
+          <button id="btnExportXls" class="btn ghost" data-i18n="btn_export_xls">📈 Export Excel</button>
         </div>
       </div>
 
@@ -195,22 +130,21 @@
         <table class="medic-table" id="usersTable">
           <thead>
             <tr>
-              <th>USER ID</th>
-              <th>ФИО</th>
-              <th>ГРУППА КРОВИ</th>
-              <th>IIN</th>
-              <th>ГОРОД</th>
-              <th>ТЕЛЕФОН</th>
-              <th>EMAIL</th>
+              <th data-i18n="th_user_id">USER ID</th>
+              <th data-i18n="th_name">ФИО</th>
+              <th data-i18n="th_blood">ГРУППА КРОВИ</th>
+              <th data-i18n="th_iin">IIN</th>
+              <th data-i18n="th_city">ГОРОД</th>
+              <th data-i18n="th_phone">ТЕЛЕФОН</th>
+              <th data-i18n="th_email">EMAIL</th>
             </tr>
           </thead>
           <tbody id="usersTbody">
-            <tr><td colspan="7" class="loading-row">⏳ Загрузка данных...</td></tr>
+            <tr><td colspan="7" class="loading-row" data-i18n="loading_text">⏳ Загрузка данных...</td></tr>
           </tbody>
         </table>
       </div>
 
-      <!-- ✅ ДОБАВЛЕНО: Контейнер для пагинации -->
       <div id="paginationBox"></div>
 
     </main>
@@ -219,11 +153,11 @@
       <div class="footer-inner">
         <div class="footer-cards">
           <div class="footer-card">
-            <div id="contactTitle" class="footer-title">Контакты</div>
+            <div id="contactTitle" class="footer-title" data-i18n="footer_contacts">Контакты</div>
             <div id="contactPhone" class="footer-sub"></div>
           </div>
           <div class="footer-card">
-            <div id="emailTitle" class="footer-title">Email</div>
+            <div id="emailTitle" class="footer-title" data-i18n="footer_email">Email</div>
             <div id="contactEmail" class="footer-sub"></div>
           </div>
         </div>
@@ -236,6 +170,142 @@
 {% block extra_scripts %}
   <script defer src="{% static 'home.js' %}"></script>
   <script defer src="{% static 'medic.js' %}?v=4"></script>
+
+  <script>
+  // Локальная i18n для страницы medic_users (scope = main.content)
+  document.addEventListener('DOMContentLoaded', () => {
+    const scope = document.querySelector('main.content');
+    if (!scope) return;
+
+    const i18n = {
+      ru: {
+        page_title: "Пользователи — панель медика",
+        search_placeholder: "Поиск: имя / IIN / email",
+        filter_blood: "Все группы крови",
+        filter_city: "Все города",
+        btn_refresh: "🔄 Обновить",
+        btn_export_csv: "📊 Export CSV",
+        btn_export_xls: "📈 Export Excel",
+        th_user_id: "USER ID",
+        th_name: "ФИО",
+        th_blood: "ГРУППА КРОВИ",
+        th_iin: "IIN",
+        th_city: "ГОРОД",
+        th_phone: "ТЕЛЕФОН",
+        th_email: "EMAIL",
+        loading_text: "⏳ Загрузка данных...",
+        footer_contacts: "Контакты",
+        footer_email: "Email",
+        profile_cabinet: "Личный кабинет",
+        profile_logout: "Выйти"
+      },
+      kk: {
+        page_title: "Пайдаланушылар — медицина панелі",
+        search_placeholder: "Іздеу: есім / ЖСН / email",
+        filter_blood: "Барлық қан топтары",
+        filter_city: "Барлық қалалар",
+        btn_refresh: "🔄 Жаңарту",
+        btn_export_csv: "📊 CSV экспорт",
+        btn_export_xls: "📈 Excel экспорт",
+        th_user_id: "USER ID",
+        th_name: "Толық аты",
+        th_blood: "ҚАН ТОБЫ",
+        th_iin: "ЖСН",
+        th_city: "ҚАЛА",
+        th_phone: "ТЕЛЕФОН",
+        th_email: "EMAIL",
+        loading_text: "⏳ Деректер жүктелуде...",
+        footer_contacts: "Байланыс",
+        footer_email: "Электрондық пошта",
+        profile_cabinet: "Жеке кабинет",
+        profile_logout: "Шығу"
+      },
+      en: {
+        page_title: "Users — Medic panel",
+        search_placeholder: "Search: name / IIN / email",
+        filter_blood: "All blood groups",
+        filter_city: "All cities",
+        btn_refresh: "🔄 Refresh",
+        btn_export_csv: "📊 Export CSV",
+        btn_export_xls: "📈 Export Excel",
+        th_user_id: "USER ID",
+        th_name: "Full name",
+        th_blood: "BLOOD GROUP",
+        th_iin: "IIN",
+        th_city: "CITY",
+        th_phone: "PHONE",
+        th_email: "EMAIL",
+        loading_text: "⏳ Loading...",
+        footer_contacts: "Contacts",
+        footer_email: "Email",
+        profile_cabinet: "Profile",
+        profile_logout: "Logout"
+      }
+    };
+
+    function apply(lang) {
+      const dict = i18n[lang] || i18n.ru;
+
+      // data-i18n -> textContent
+      scope.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (k && dict[k] !== undefined) el.textContent = dict[k];
+      });
+
+      // data-i18n-select -> change first option text (placeholder)
+      scope.querySelectorAll('[data-i18n-select]').forEach(sel => {
+        const k = sel.getAttribute('data-i18n-select');
+        const ph = dict[k] ?? "";
+        if (sel.options && sel.options.length) sel.options[0].textContent = ph;
+        else sel.innerHTML = `<option value="">${ph}</option>`;
+      });
+
+      // data-i18n-option for explicit <option>
+      scope.querySelectorAll('[data-i18n-option]').forEach(opt => {
+        const k = opt.getAttribute('data-i18n-option');
+        if (k && dict[k] !== undefined) opt.textContent = dict[k];
+      });
+
+      // data-i18n-placeholder -> placeholder attribute
+      scope.querySelectorAll('[data-i18n-placeholder]').forEach(inp => {
+        const k = inp.getAttribute('data-i18n-placeholder');
+        if (k && dict[k] !== undefined) inp.placeholder = dict[k];
+      });
+
+      // loading row
+      const loading = scope.querySelector('.loading-row');
+      if (loading && dict.loading_text) loading.textContent = dict.loading_text;
+    }
+
+    // Wire language buttons (topbar .lang-link) but do NOT change global cookie/behaviour
+    const buttons = document.querySelectorAll('.lang-link');
+    if (buttons && buttons.length) {
+      buttons.forEach(b => {
+        b.addEventListener('click', (e) => {
+          buttons.forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          const lang = b.dataset.lang || 'ru';
+          apply(lang);
+
+          // adjust some profile popover texts if open
+          const profilePop = document.getElementById('profilePopover');
+          if (profilePop && !profilePop.classList.contains('hidden')) {
+            // translate items inside popover
+            const pc = profilePop.querySelectorAll('[data-i18n]');
+            pc.forEach(el => {
+              const key = el.getAttribute('data-i18n');
+              if (key && i18n[lang][key]) el.textContent = i18n[lang][key];
+            });
+          }
+        });
+      });
+
+      // apply default on load (use active button or RU)
+      const active = Array.from(buttons).find(b => b.classList.contains('active')) || buttons[0];
+      apply(active ? (active.dataset.lang || 'ru') : 'ru');
+    }
+  });
+  </script>
 
   <script>
     (function(){
