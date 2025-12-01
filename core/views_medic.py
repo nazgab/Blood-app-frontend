@@ -23,6 +23,7 @@ try:
     from .legacy_serializers import LegacyUserSerializer
 except Exception:
     LegacyUserSerializer = None
+from django.http import HttpResponseForbidden
 
 class MedicLegacyPagination(PageNumberPagination):
     # по умолчанию пусть сервер возвращает крупные блоки, чтобы фронт мог брать больше сразу
@@ -32,8 +33,27 @@ class MedicLegacyPagination(PageNumberPagination):
 
 @login_required
 def medic_home(request):
-    is_medic = getattr(getattr(request.user, "profile", None), "role", "") == "medic"
-    return render(request, "home.html", {"is_medic": is_medic})
+    user = request.user
+
+    # проверка прав: роль в profile или группа 'medic'
+    is_medic = False
+    if getattr(user, "is_authenticated", False):
+        is_medic = getattr(getattr(user, "profile", None), "role", None) == "medic"
+        if not is_medic:
+            is_medic = user.groups.filter(name="medic").exists()
+
+    if not is_medic:
+        # если пользователь не медик — можно перенаправить или вернуть 403
+        # вариант: редирект на обычную страницу
+        return render(request, "home.html", {})  # или: return HttpResponseForbidden()
+    
+    # отдать именно medic_home.html
+    resp = render(request, "medic_home.html", {
+        # сюда можно положить контекст, если нужен
+    })
+    # Для отладки — заголовок с именем шаблона (удалить в проде)
+    resp["X-Template-Used"] = "medic_home.html"
+    return resp
 
 
 @login_required

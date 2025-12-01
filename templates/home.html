@@ -7,6 +7,7 @@
   <title>BloodSeeker — Главная</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'home.css' %}">
+  <link rel="stylesheet" href="{% static 'mobile_home.css' %}" media="screen and (max-width: 768px)">
 </head>
 <body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
 
@@ -51,7 +52,7 @@
         {% if user.is_authenticated %}
           <!-- Профиль и меню -->
           <button class="user" type="button" aria-label="Профиль" id="profileBtn">
-            <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+            <img class="avatar" src="{% static 'avatar.jfif' %}" alt="user">
             <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
           </button>
         {% else %}
