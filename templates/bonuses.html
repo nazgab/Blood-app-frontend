@@ -1,16 +1,29 @@
 {% load static %}
 <!doctype html>
-<html lang="{{ request.LANGUAGE_CODE|default:'ru' }}">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BloodSeeker — Бонусы</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'home.css' %}">
   <link rel="stylesheet" href="{% static 'bonuses.css' %}">
+  <!-- ваш CSS и inline styles остаются -->
 </head>
 <body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
+  <!-- ваш HTML содержимое (как у вас сейчас: header, balance, spend-grid, footer) -->
+  <!-- ... (оставляем без изменений) ... -->
+
+  <!-- Подключаем bonuses.js -->
+  <script src="{% static 'bonuses.js' %}" defer></script>
+
+  <!-- Inline fetchBonuses() — ваша версия (оставляем без изменений) -->
+  <script>
+    /* ваш inline fetchBonuses() как в оригинале */
+  </script>
+
+</body>
 
   <!-- боковая + хедер -->
   <aside class="side">
@@ -36,8 +49,8 @@
       <div class="topbar-right">
         <div class="langs" id="langBar">
           <button class="lang-link" data-lang="kk">KK</button>
-<button class="lang-link" data-lang="ru">RU</button>
-<button class="lang-link" data-lang="en">EN</button>
+          <button class="lang-link" data-lang="ru">RU</button>
+          <button class="lang-link" data-lang="en">EN</button>
 
         </div>
 
@@ -72,7 +85,7 @@
       <div class="balance-wrapper">
         <div class="balance-card">
           <div class="balance-left">
-            <div class="balance-meta">Накоплено бонусов</div>
+            <div class="balance-label">Накоплено бонусов</div>
             <div class="balance-amount" id="bonusValue">0.00  
                 <span class="heart">♥</span></div>
           </div>
@@ -118,7 +131,7 @@
           </div>
 
           <div class="footer-card">
-            <div class="footer-title">Эл. почта</div>
+            <div class="email-title">Эл. почта</div>
             <div class="footer-sub">support@example.kz</div>
           </div>
         </div>
@@ -141,3 +154,43 @@
   </script>
 </body>
 </html>
+
+<script>
+(function(){
+  // Надёжный и краткий рантайм для переключателя языка
+  const LS_KEY = 'bs_lang';
+  const supported = ['kk','ru','en'];
+  function getLang(){ const l = localStorage.getItem(LS_KEY) || document.documentElement.lang || 'ru'; return supported.includes(l) ? l : 'ru'; }
+  function setLang(l){
+    if(!supported.includes(l)) l='ru';
+    localStorage.setItem(LS_KEY, l);
+    document.documentElement.lang = l;
+    // визуально пометить кнопки
+    document.querySelectorAll('.lang-link').forEach(btn=>{
+      const d = btn.dataset.lang || btn.getAttribute('data-lang');
+      if(d) btn.classList.toggle('active', d === l);
+    });
+    // повторно вызываем экспортированную функцию (если есть)
+    try { if(window.bs_applyBonusesLang) window.bs_applyBonusesLang(l); } catch(e){ console.warn(e); }
+  }
+  // привязка кликов — если кнопки есть
+  document.querySelectorAll('.lang-link').forEach(btn=>{
+    btn.removeEventListener('click', btn._i18n_click || (()=>{}));
+    const handler = (e)=>{
+      e.preventDefault();
+      const l = btn.dataset.lang || btn.getAttribute('data-lang');
+      setLang(l);
+    };
+    btn.addEventListener('click', handler);
+    btn._i18n_click = handler;
+  });
+
+  // применяем язык при загрузке и повторно спустя небольшую задержку
+  setLang(getLang());
+  setTimeout(()=> setLang(getLang()), 300);
+  setTimeout(()=> setLang(getLang()), 1200);
+
+  // Экспорт для ручного вызова в консоли: window.forceLang('en')
+  window.forceLang = function(lang){ setLang(lang); };
+})();
+</script>
