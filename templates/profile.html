@@ -19,9 +19,7 @@
         <img id="logo" src="{% static 'img/logo-fallback.png' %}" alt="logo">
       {% endif %}
     </a>
-    <button class="burger" aria-label="menu" type="button" id="burgerBtn">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="burger" aria-label="menu" type="button" id="burgerBtn"><span></span><span></span><span></span></button>
   </div>
 </aside>
 
@@ -73,8 +71,8 @@
         </div>
         <hr>
         <nav class="profile-menu">
-          <a href="{% url 'profile' %}" class="profile-link">Жеке кабинет</a>
-          <a href="{% url 'logout' %}?next=/" class="profile-link danger">Шығу</a>
+          <a href="{% url 'profile' %}" class="profile-link" data-i18n="profile_link_profile">Жеке кабинет</a>
+          <a href="{% url 'logout' %}?next=/" class="profile-link danger" data-i18n="profile_link_logout">Шығу</a>
         </nav>
       </div>
     </div>
@@ -84,139 +82,181 @@
   <main class="content profile-page">
     <div class="container profile-page">
 
-      <!-- "Назад" — теперь внутри контейнера, слева над заголовком -->
       <a class="back-btn" href="javascript:history.back()" aria-label="Назад">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        Назад
+        <span data-i18n="back">Назад</span>
       </a>
 
-      <h2>Личный кабинет</h2>
+      <h2 data-i18n="page_title">Личный кабинет</h2>
 
-      <!-- Персональные данные -->
-      <section class="card">
-        <h3>Персональные данные</h3>
+      {# --------------- МЕДИЦИНСКИЙ РАБОТНИК (medic) --------------- #}
+      {% if profile and profile.role|default:""|lower == "medic" %}
+        <section class="card">
+          <h3 data-i18n="personal_h3">Персональные данные</h3>
+          <button class="btn-change-password" type="button" data-i18n="change_password">Изменить пароль</button>
 
-        <button class="btn-change-password" type="button">Изменить пароль</button>
+          <div class="personal-grid">
+            <div>
+              <div class="pair">
+                <label data-i18n="last_name">Фамилия:</label>
+                <div class="value muted">{{ employee.last_name|default:profile.last_name|default:"—" }}</div>
+              </div>
 
-        <div class="personal-grid">
-          <div>
-            <div class="pair">
-              <label>Фамилия:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.last_name|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.last_name.value|default:"—" }}
-                {% else %}—{% endif %}
+              <div class="pair">
+                <label data-i18n="position">Должность:</label>
+                <div class="value muted">
+                  {{ employee.position|default:middle_display|default:"—" }}
+                </div>
               </div>
             </div>
 
-            <div class="pair">
-              <label>Отчество:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}
-                  {% if legacy.middle_name %}{{ legacy.middle_name }}{% elif legacy.middle %}{{ legacy.middle }}{% else %}—{% endif %}
-                {% elif mode == "profile" and form %}
-                  {{ form.middle_name.value|default:"—" }}
-                {% else %}—{% endif %}
+            <div>
+              <div class="pair">
+                <label data-i18n="first_name">Имя:</label>
+                <div class="value muted">{{ employee.first_name|default:profile.first_name|default:"—" }}</div>
               </div>
-            </div>
 
-            <div class="pair">
-              <label>Вес:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.weight|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.weight.value|default:"—" }}
-                {% else %}—{% endif %}
+              <div class="pair">
+                <label data-i18n="work_place">Место работы (ID):</label>
+                <div class="value muted">{{ employee.center_id|default:"—" }}</div>
               </div>
-            </div>
 
-            <div class="pair">
-              <label>Группа крови:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.blood_group|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.blood_group.value|default:"—" }}
-                {% else %}—{% endif %}
+              <div class="pair">
+                <label data-i18n="phone">Телефон:</label>
+                <div class="value muted">{{ display_phone|default:"—" }}</div>
               </div>
             </div>
           </div>
+        </section>
 
-          <div>
-            <div class="pair">
-              <label>Имя:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.first_name|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.first_name.value|default:"—" }}
-                {% else %}—{% endif %}
-              </div>
-            </div>
-
-            <div class="pair">
-              <label>ИИН:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.iin|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.iin.value|default:"—" }}
-                {% else %}—{% endif %}
-              </div>
-            </div>
-
-            <div class="pair">
-              <label>Город:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.city|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.city.value|default:"—" }}
-                {% else %}—{% endif %}
-              </div>
-            </div>
-
-            <div class="pair">
-              <label>Адрес:</label>
-              <div class="value muted">
-                {% if mode == "legacy" and legacy %}{{ legacy.address|default:"—" }}
-                {% elif mode == "profile" and form %}{{ form.address.value|default:"—" }}
-                {% else %}—{% endif %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Контактные данные -->
-      <section class="card">
-        <h3>Контактные данные</h3>
-
-        {% if mode == "legacy" and legacy %}
+        <section class="card">
+          <h3 data-i18n="contact_h3">Контактные данные</h3>
           <div class="contact-grid">
             <div>
-              <label>Email:</label>
-              <div class="value muted">{{ legacy.email|default:"—" }}</div>
+              <label data-i18n="email">Email:</label>
+              <div class="value muted">{{ display_email|default:"—" }}</div>
             </div>
             <div>
-              <label>Номер телефона:</label>
-              <div class="value muted">{{ legacy.phone|default:"—" }}</div>
+              <label data-i18n="phone">Телефон:</label>
+              <div class="value muted">{{ employee.phone|default:profile.phone|default:"—" }}</div>
             </div>
           </div>
+        </section>
 
-        {% elif mode == "profile" and form %}
-          <form method="post" class="contact-form">
-            {% csrf_token %}
+      {# --------------- НЕ-медик (обычный пользователь) --------------- #}
+      {% else %}
+        <section class="card">
+          <h3 data-i18n="personal_h3">Персональные данные</h3>
+          <button class="btn-change-password" type="button" data-i18n="change_password">Изменить пароль</button>
+
+          <div class="personal-grid">
             <div>
-              <label>Email</label>
-              {{ form.email }}
+              <div class="pair">
+                <label data-i18n="last_name">Фамилия:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.last_name|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.last_name.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+
+              <div class="pair">
+                <label data-i18n="middle_name">Отчество:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}
+                    {% if legacy.middle_name %}{{ legacy.middle_name }}{% elif legacy.middle %}{{ legacy.middle }}{% else %}—{% endif %}
+                  {% elif mode == "profile" and form %}{{ form.middle_name.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+
+              <div class="pair">
+                <label data-i18n="weight">Вес:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.weight|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.weight.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+
+              <div class="pair">
+                <label data-i18n="blood_group">Группа крови:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.blood_group|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.blood_group.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
             </div>
+
             <div>
-              <label>Номер телефона</label>
-              {{ form.phone }}
-            </div>
+              <div class="pair">
+                <label data-i18n="first_name">Имя:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.first_name|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.first_name.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
 
-            <div class="form-actions">
-              <button type="submit" class="btn-auth btn-auth-primary">Сохранить</button>
-              <a href="{% url 'profile' %}" class="btn-auth btn-auth-outline">Отмена</a>
-            </div>
-          </form>
+              <div class="pair">
+                <label data-i18n="iin">ИИН:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.iin|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.iin.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
 
-        {% endif %}
-      </section>
+              <div class="pair">
+                <label data-i18n="city">Город:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.city|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.city.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+
+              <div class="pair">
+                <label data-i18n="address">Адрес:</label>
+                <div class="value muted">
+                  {% if mode == "legacy" and legacy %}{{ legacy.address|default:"—" }}
+                  {% elif mode == "profile" and form %}{{ form.address.value|default:"—" }}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3 data-i18n="contact_h3">Контактные данные</h3>
+          {% if mode == "legacy" and legacy %}
+            <div class="contact-grid">
+              <div>
+                <label data-i18n="email">Email:</label>
+                <div class="value muted">{{ legacy.email|default:"—" }}</div>
+              </div>
+              <div>
+                <label data-i18n="phone">Номер телефона:</label>
+                <div class="value muted">{{ legacy.phone|default:"—" }}</div>
+              </div>
+            </div>
+          {% elif mode == "profile" and form %}
+            <form method="post" class="contact-form">
+              {% csrf_token %}
+              <div><label data-i18n="email">Email</label>{{ form.email }}</div>
+              <div><label data-i18n="phone">Номер телефона</label>{{ form.phone }}</div>
+              <div class="form-actions">
+                <button type="submit" class="btn-auth btn-auth-primary" data-i18n="save">Сохранить</button>
+                <a href="{% url 'profile' %}" class="btn-auth btn-auth-outline" data-i18n="cancel">Отмена</a>
+              </div>
+            </form>
+          {% endif %}
+        </section>
+      {% endif %}
 
     </div>
   </main>
@@ -237,135 +277,115 @@
 <script defer src="{% static 'home.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // область, в которой делаем локальную подмену
   const scope = document.querySelector('.profile-page');
   if (!scope) return;
 
-  // элементы, которые переведём
-  const backBtn = scope.querySelector('.back-btn');
-  const pageTitle = scope.querySelector('h2');
-  const cardHeaders = Array.from(scope.querySelectorAll('section.card > h3')); // [0] персональные, [1] контакты
-  const changePwdBtn = scope.querySelector('.btn-change-password');
-  const personalLabels = Array.from(scope.querySelectorAll('.personal-grid .pair > label'));
-  const contactLabels = Array.from(scope.querySelectorAll('.contact-grid label'));
-  const contactFormLabels = Array.from(scope.querySelectorAll('.contact-form label'));
-  const profileMenuLinks = Array.from(scope.querySelectorAll('#profilePopover .profile-menu .profile-link'));
-
-  // i18n словарь (пополни, если нужно)
-  const i18n = {
+  const headerBtns = Array.from(document.querySelectorAll('.lang-link'));
+  const i18nDict = {
     ru: {
       back: 'Назад',
-      title: 'Личный кабинет',
+      page_title: 'Личный кабинет',
       personal_h3: 'Персональные данные',
       contact_h3: 'Контактные данные',
       change_password: 'Изменить пароль',
-      labels_personal: [
-        'Фамилия:', 'Отчество:', 'Вес:', 'Группа крови:',
-        'Имя:', 'ИИН:', 'Город:', 'Адрес:'
-      ],
-      labels_contact: ['Email:', 'Номер телефона:'],
-      contact_form_labels: ['Email', 'Номер телефона'],
+      // labels
+      last_name: 'Фамилия:',
+      middle_name: 'Отчество:',
+      first_name: 'Имя:',
+      weight: 'Вес:',
+      blood_group: 'Группа крови:',
+      position: 'Должность:',
+      iin: 'ИИН:',
+      city: 'Город:',
+      address: 'Адрес:',
+      work_place: 'Место работы (ID):',
+      phone: 'Телефон:',
+      email: 'Email:',
+      // buttons / links
       profile_link_profile: 'Личный кабинет',
-      profile_link_logout: 'Выйти'
+      profile_link_logout: 'Выйти',
+      save: 'Сохранить',
+      cancel: 'Отмена'
     },
     kk: {
       back: 'Артқа',
-      title: 'Жеке кабинет',
+      page_title: 'Жеке кабинет',
       personal_h3: 'Жеке деректер',
       contact_h3: 'Байланыс деректері',
       change_password: 'Құпия сөзді өзгерту',
-      labels_personal: [
-        'Тегі:', 'Әкесінің аты:', 'Салмақ:', 'Қан тобы:',
-        'Аты:', 'ЖСН:', 'Қала:', 'Мекен-жайы:'
-      ],
-      labels_contact: ['Электрондық пошта:', 'Телефон нөмірі:'],
-      contact_form_labels: ['Email', 'Телефон нөмірі'],
+      // labels
+      last_name: 'Тегі:',
+      middle_name: 'Әкесінің аты:',
+      first_name: 'Аты:',
+      weight: 'Салмақ:',
+      blood_group: 'Қан тобы:',
+      position: 'Лауазымы:',
+      iin: 'ЖСН:',
+      city: 'Қала:',
+      address: 'Мекен-жайы:',
+      work_place: 'Жұмыс орны (ID):',
+      phone: 'Телефон:',
+      email: 'Электрондық пошта:',
+      // buttons / links
       profile_link_profile: 'Жеке кабинет',
-      profile_link_logout: 'Шығу'
+      profile_link_logout: 'Шығу',
+      save: 'Сақтау',
+      cancel: 'Бас тарту'
     },
     en: {
       back: 'Back',
-      title: 'Profile',
+      page_title: 'Profile',
       personal_h3: 'Personal data',
       contact_h3: 'Contact details',
       change_password: 'Change password',
-      labels_personal: [
-        'Last name:', 'Middle name:', 'Weight:', 'Blood group:',
-        'First name:', 'IIN:', 'City:', 'Address:'
-      ],
-      labels_contact: ['Email:', 'Phone number:'],
-      contact_form_labels: ['Email', 'Phone number'],
+      // labels
+      last_name: 'Last name:',
+      middle_name: 'Middle name:',
+      first_name: 'First name:',
+      weight: 'Weight:',
+      blood_group: 'Blood group:',
+      position: 'Position:',
+      iin: 'IIN:',
+      city: 'City:',
+      address: 'Address:',
+      work_place: 'Work place (ID):',
+      phone: 'Phone:',
+      email: 'Email:',
+      // buttons / links
       profile_link_profile: 'Profile',
-      profile_link_logout: 'Logout'
+      profile_link_logout: 'Logout',
+      save: 'Save',
+      cancel: 'Cancel'
     }
   };
 
   function applyLocale(lang) {
-    const dict = i18n[lang] || i18n.ru;
-
-    // back button — сохраним svg, заменим текст
-    if (backBtn) {
-      const svg = backBtn.querySelector('svg') ? backBtn.querySelector('svg').outerHTML : '';
-      backBtn.innerHTML = svg + ' ' + dict.back;
-    }
-
-    if (pageTitle) pageTitle.textContent = dict.title || '';
-    if (cardHeaders[0]) cardHeaders[0].textContent = dict.personal_h3 || '';
-    if (cardHeaders[1]) cardHeaders[1].textContent = dict.contact_h3 || '';
-    if (changePwdBtn) changePwdBtn.textContent = dict.change_password || '';
-
-    // персональные метки (по порядку)
-    if (personalLabels && personalLabels.length && dict.labels_personal) {
-      for (let i = 0; i < personalLabels.length; i++) {
-        if (dict.labels_personal[i]) personalLabels[i].textContent = dict.labels_personal[i];
+    const dict = i18nDict[lang] || i18nDict.ru;
+    // найти все элементы с data-i18n в scope и заменить
+    const nodes = scope.querySelectorAll('[data-i18n]');
+    nodes.forEach(n => {
+      const key = n.getAttribute('data-i18n');
+      if (!key) return;
+      if (dict[key]) {
+        n.textContent = dict[key];
       }
-    }
+    });
 
-    // контактные метки (в секции просмотра)
-    if (contactLabels && contactLabels.length && dict.labels_contact) {
-      for (let i = 0; i < contactLabels.length; i++) {
-        if (dict.labels_contact[i]) contactLabels[i].textContent = dict.labels_contact[i];
-      }
-    }
-
-    // контактная форма (если есть)
-    if (contactFormLabels && contactFormLabels.length && dict.contact_form_labels) {
-      for (let i = 0; i < contactFormLabels.length; i++) {
-        if (dict.contact_form_labels[i]) contactFormLabels[i].textContent = dict.contact_form_labels[i];
-      }
-    }
-
-    // profile popover links (если поповер открыт, он будет перестроен при открытии, но подстраховка)
-    if (profileMenuLinks && profileMenuLinks.length) {
-      profileMenuLinks.forEach(a => {
-        const href = a.getAttribute('href') || '';
-        if (href.includes('logout')) {
-          a.textContent = dict.profile_link_logout || a.textContent;
-        } else {
-          a.textContent = dict.profile_link_profile || a.textContent;
-        }
-      });
-    }
+    // пометка active на кнопках языка
+    headerBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   }
 
-  // Привязка к кнопкам языка в шапке (добавляем дополнительный handler, не трогаем глобальных слушателей)
-  const headerBtns = document.querySelectorAll('.lang-link');
+  // init handlers
   headerBtns.forEach(btn => {
     btn.addEventListener('click', (ev) => {
       const lang = btn.dataset.lang || 'ru';
-      // визуальная отметка (локально)
-      headerBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      // применяем только в этом scope
       applyLocale(lang);
-      // НЕ трогаем cookie / document.documentElement.lang / глобальную локализацию
     });
   });
 
-  // При первой загрузке применим язык активной кнопки или ru
-  const activeBtn = Array.from(headerBtns).find(b => b.classList.contains('active')) || headerBtns[1] || headerBtns[0];
-  const defaultLang = activeBtn ? (activeBtn.dataset.lang || 'ru') : 'ru';
-  applyLocale(defaultLang);
+  // initial: если одна из кнопок была помечена active — используем её, иначе default ru
+  const active = headerBtns.find(b => b.classList.contains('active')) || headerBtns[1] || headerBtns[0];
+  applyLocale(active ? (active.dataset.lang || 'ru') : 'ru');
 });
 </script>
 

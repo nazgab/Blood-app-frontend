@@ -165,11 +165,38 @@ class Profile(models.Model):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
 
+    # ===== поле для привязки к employees =====
+    # будем хранить employee.employee_id сюда (опционально, null)
+    employee_id = models.IntegerField(blank=True, null=True, db_index=True)
+
     def is_medic(self):
         return self.role == "medic"
 
+    def get_employee(self):
+        """
+        Возвращает объект Employee, если он существует:
+         - сначала пытаемся по employee_id (если заполнено),
+         - затем по совпадению имени+фамилии (fallback).
+        """
+        from .models import Employee  # локальный импорт чтобы не было циклов
+
+        if self.employee_id:
+            emp = Employee.objects.filter(employee_id=self.employee_id).first()
+            if emp:
+                return emp
+
+        # fallback: поиск по имени/фамилии (чувствителен к совпадению)
+        if self.first_name and self.last_name:
+            return Employee.objects.filter(
+                first_name=self.first_name,
+                last_name=self.last_name
+            ).first()
+
+        return None
+
     def __str__(self):
         return f"Profile({self.user.username})"
+
   
 class AdminDonation(models.Model):
     admin_donation_id = models.AutoField(primary_key=True, db_column='admin_donation_id')
@@ -182,3 +209,21 @@ class AdminDonation(models.Model):
     class Meta:
         db_table = "admin_donations"
         managed = False  # таблица уже есть в базе  
+
+class Employee(models.Model):
+    employee_id = models.AutoField(primary_key=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    position = models.CharField(max_length=100)
+    center_id = models.IntegerField()
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'employees'
+        managed = False
+
+    def __str__(self):
+        return f"Employee({self.employee_id}) {self.first_name} {self.last_name}"
+

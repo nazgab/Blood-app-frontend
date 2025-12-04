@@ -181,6 +181,67 @@ class LoginView(APIView):
             "access": str(refresh.access_token),
         })
 
+from types import SimpleNamespace
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+from .models import Profile
+
+@login_required
+def profile_page(request):
+    """
+    Минимальный view для profile.html:
+    - формирует form (как в шаблоне ожидается)
+    - получает profile
+    - подставляет employee через profile.get_employee() (если роль medic)
+    """
+    profile = Profile.objects.filter(user=request.user).first()
+
+    # формируем "form" объект (шаблон ждёт .value)
+    class _Fld:
+        def __init__(self, v): self.value = v if v is not None else ""
+    form = SimpleNamespace(
+        first_name=_Fld(getattr(profile, "first_name", "") if profile else ""),
+        last_name=_Fld(getattr(profile, "last_name", "") if profile else ""),
+        middle_name=_Fld(getattr(profile, "middle_name", "") if profile else ""),
+        iin=_Fld(getattr(profile, "iin", "") if profile else ""),
+        weight=_Fld(getattr(profile, "weight", "") if profile else ""),
+        blood_group=_Fld(getattr(profile, "blood_group", "") if profile else ""),
+        city=_Fld(getattr(profile, "city", "") if profile else ""),
+        address=_Fld(getattr(profile, "address", "") if profile else ""),
+        email=_Fld(request.user.email if request.user else ""),
+        phone=_Fld(getattr(profile, "phone", "") if profile else ""),
+    )
+
+    # получаем employee только если роль медик
+    employee = None
+    if profile and str(getattr(profile, "role", "")).lower() in ("medic", "медик"):
+        # использует метод get_employee() в Profile (если ты добавил ранее)
+        try:
+            employee = profile.get_employee()
+        except Exception:
+            employee = None
+
+    context = {
+        "mode": "profile",
+        "form": form,
+        "profile": profile,
+        "employee": employee,
+        "legacy": None,
+    }
+    return render(request, "profile.html", context)
+
+
+def profile_view(request):
+    email = (request.user.email or request.user.username).strip()
+    
+    import os
+    from django.template.loader import get_template
+    tpl = get_template("profile.html")
+    print("=== REAL TEMPLATE PATH ===")
+    print(os.path.abspath(tpl.origin.name))
+    print("==========================")
+
 
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
