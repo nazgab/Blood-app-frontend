@@ -18,6 +18,7 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
     path("home/", login_required(TemplateView.as_view(template_name="home.html")), name="home"),
+    path("bonuses/", login_required(TemplateView.as_view(template_name="bonuses.html")), name="bonuses"),
     path("m/", mobile_home, name="mobile_home"),
 
     path("admin/", admin.site.urls),

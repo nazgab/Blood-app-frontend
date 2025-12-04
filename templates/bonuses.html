@@ -1,0 +1,143 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ request.LANGUAGE_CODE|default:'ru' }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BloodSeeker — Бонусы</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home.css' %}">
+  <link rel="stylesheet" href="{% static 'bonuses.css' %}">
+</head>
+<body data-role="{% if is_medic %}medic{% else %}user{% endif %}">
+
+  <!-- боковая + хедер -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="/"><img id="logo" src="{% static 'logo_small.png' %}" alt="logo"></a>
+      <button class="burger" aria-label="menu" type="button"><span></span><span></span><span></span></button>
+    </div>
+  </aside>
+
+  <div id="menuPopover" class="menu-popover hidden"></div>
+  <div id="menuBackdrop" class="menu-backdrop hidden"></div>
+
+  <div class="page">
+    <header class="topbar">
+      <div class="welcome" id="welcomeText">
+        {% if user.is_authenticated %}
+          Добро пожаловать, <span id="userName">{{ user.get_full_name|default:user.username }}</span>
+        {% else %}
+          Қош келдіңіз! <a href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
+      </div>
+
+      <div class="topbar-right">
+        <div class="langs" id="langBar">
+          <button class="lang-link" data-lang="kk">KK</button>
+<button class="lang-link" data-lang="ru">RU</button>
+<button class="lang-link" data-lang="en">EN</button>
+
+        </div>
+
+        {% if user.is_authenticated %}
+          <button class="user" type="button" aria-label="Профиль" id="profileBtn">
+            <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+            <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
+          </button>
+
+          <div id="profilePopover" class="profile-popover hidden"></div>
+          <div id="profileBackdrop" class="profile-backdrop hidden"></div>
+        {% else %}
+          <a class="btn" href="{% url 'login' %}?next={{ request.path }}">Кіру / Войти</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="content">
+      
+      <!-- БАННЕР -->
+      <section class="promo-card">
+        <div class="promo-text">
+          <h1 class="banner-title">BLOODSEEKER</h1>
+        </div>
+
+        <div class="promo-ill">
+          <img src="{% static 'img/banner-right.png' %}" alt="illustration">
+        </div>
+      </section>
+
+      <!-- КАРТОЧКА БАЛАНСА -->
+      <div class="balance-wrapper">
+        <div class="balance-card">
+          <div class="balance-left">
+            <div class="balance-meta">Накоплено бонусов</div>
+            <div class="balance-amount" id="bonusValue">0.00  
+                <span class="heart">♥</span></div>
+          </div>
+
+          
+
+        <div class="section-divider"></div>
+
+        <div class="bonus-list" id="bonusList">
+          <div class="loader" id="loader">             </div>
+        </div>
+      </div>
+
+      <!-- На что потратить -->
+      <div class="spend-section">
+        <h2 class="spend-title">На что потратить</h2>
+
+        <div class="spend-grid">
+          <div class="spend-item" data-href="/partners/magnum/">
+            <img src="{% static 'partners/magnum.png' %}" alt="Magnum">
+            <div class="spend-name">Magnum</div>
+          </div>
+
+          <div class="spend-item" data-href="/partners/sulpak/">
+            <img src="{% static 'partners/sulpak.png' %}" alt="Sulpak">
+            <div class="spend-name">Sulpak</div>
+          </div>
+
+          <div class="spend-item" data-href="/partners/fresh/">
+            <img src="{% static 'partners/fresh.png' %}" alt="Fresh">
+            <div class="spend-name">Fresh</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-cards">
+          <div class="footer-card">
+            <div class="footer-title">Поддержка</div>
+            <div class="footer-sub">+7 700 000 00 00</div>
+          </div>
+
+          <div class="footer-card">
+            <div class="footer-title">Эл. почта</div>
+            <div class="footer-sub">support@example.kz</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="copyright">© 2025 BloodSeeker. Все права защищены.</div>
+    </footer>
+  </div>
+
+  <script src="{% static 'home.js' %}" defer></script>
+  <script>
+    // Небольшая логика: кликабельные партнёры и плейсхолдер кнопок
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.spend-item[data-href]').forEach(el=>{
+        el.addEventListener('click', ()=> window.location.href = el.dataset.href);
+      });
+      document.getElementById('refreshBtn')?.addEventListener('click', ()=> alert('Обновляем...'));
+      document.getElementById('convertBtn')?.addEventListener('click', ()=> alert('Потратить пока нельзя'));
+    });
+  </script>
+</body>
+</html>
