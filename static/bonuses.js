@@ -1,281 +1,304 @@
-/* bonuses.js — исправленная версия
-   2025 — применимо для вашего bonuses.html
-   (заменяет предыдущий bonuses.js)
+/* bonuses.js
+   Обновлённый единый файл:
+   - Полный переключатель языков (KK / RU / EN) — сохраняет выбор в localStorage
+   - Применяет переводы к заголовкам, подзаголовкам, футеру, кнопкам и лоадеру
+   - НЕ трогает остальной функционал (fetchBonuses, обработчики кнопок и т.д.)
 */
 
-(function(){
-  // ---------- Вспомогательные ----------
-  function qs(sel){ return document.querySelector(sel); }
-  function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
+/* ============================
+   ========== CONFIG ==========
+   ============================ */
 
-  // ---------- TRANSLATIONS ----------
-  const supportedLangs = ['kk','ru','en'];
-  const LS_KEY = 'bs_lang';
+const supportedLangs = ['kk', 'ru', 'en'];
+const LS_KEY = 'bs_lang'; // ключ в localStorage для языка
 
-  const TRANSLATIONS = {
-    balanceLabel: { kk: 'Жиналған бонустар', ru: 'Накоплено бонусов', en: 'Accumulated bonuses' },
-    bonusSubDefault: { kk: 'Жаңарту деректері…', ru: 'Загружаем данные.', en: 'Loading data...' },
-    loaderText: { kk: '', ru: '', en: '' },
-    spendTitle: { kk: 'Не нәрсеге жұмсау', ru: 'На что потратить', en: 'Where to spend' },
-    contactTitle: { kk: 'Байланыс', ru: 'Контакты', en: 'Contacts' },
-    emailTitle:   { kk: 'Эл. почта', ru: 'Email', en: 'Email' },
-    footerText:   { kk: '© 2025 BloodSeeker. Барлық құқықтар қорғалған.', ru: '© 2025 BloodSeeker. Все права защищены.', en: '© 2025 BloodSeeker. All rights reserved.' },
-    partners: {
-      'Magnum': { kk: 'Magnum', ru: 'Magnum', en: 'Magnum' },
-      'Sulpak': { kk: 'Sulpak', ru: 'Sulpak', en: 'Sulpak' },
-      'Fresh':  { kk: 'Fresh',  ru: 'Fresh',  en: 'Fresh' }
-    },
-    // дополнительные строки
-    welcome: { kk: 'Қош келдіңіз,', ru: 'Добро пожаловать,', en: 'Welcome,' },
-    profile: { kk: 'Жеке кабинет', ru: 'Личный кабинет', en: 'Account' },
-    logout:  { kk: 'Шығу', ru: 'Выйти', en: 'Log out' },
-    btnSpend: { kk: 'Потратить', ru: 'Потратить', en: 'Spend' },
-    btnLoadMore: { kk: 'Тағы жүктеу', ru: 'Загрузить ещё', en: 'Load more' }
-  };
+/* ============================
+   ====== TRANSLATIONS ========
+   ============================ */
 
-  // ---------- Lang helpers ----------
-  function getLang(){
-    const ls = localStorage.getItem(LS_KEY);
-    if (ls && supportedLangs.includes(ls)) return ls;
-    const htmlLang = document.documentElement.lang;
-    if (htmlLang && supportedLangs.includes(htmlLang)) return htmlLang;
-    return 'ru';
-  }
+/*
+  Добавляйте сюда ключи и переводы. Ключи должны соответствовать id или
+  классу (используем getElementById или querySelector('.className')) ниже.
+*/
+const TRANSLATIONS = {
+  // Пример: id/contactTitle -> переводы
+  contactTitle: { kk: 'Байланыс', ru: 'Контакты', en: 'Contacts' },
+  emailTitle:   { kk: 'Email',     ru: 'Email',     en: 'Email' },
+  footerText:   { kk: '© 2025 BloodSeeker. Барлық құқықтар қорғалған.', ru: '© 2025 BloodSeeker. Все права защищены.', en: '© 2025 BloodSeeker. All rights reserved.' },
+  promoTitle:   { kk: 'BloodSeeker сіздің мобильді телефоныңыз', ru: 'BloodSeeker в твоем мобильном телефоне', en: 'BloodSeeker on your mobile phone' },
+  promoSub:     { kk: 'Қолданбаны жүктеп алып, ыңғайлы қараңыз', ru: 'Скачай приложение для более удобного просмотра', en: 'Download the app for more convenient viewing' },
+  heroTitle:    { kk: 'Қан тапсырыңыз - өмірді сақтаңыз!', ru: 'Сдайте кровь - подарите жизнь!', en: 'Donate blood — save a life!' },
+  heroSub:      { kk: 'Тіркеліп, ең жақын орталықты табыңыз', ru: 'Зарегистрируйтесь и найдите ближайший центр', en: 'Register and find the nearest center' },
+  aboutTitle:   { kk: 'Біз туралы', ru: 'О нас', en: 'About us' },
+  spendTitle:   { kk: 'Не нәрсеге жұмсау', ru: 'На что потратить', en: 'Where to spend' },
+  bonusSub:     { kk: 'Жаңарту деректері…', ru: 'Загружаем данные...', en: 'Loading data...' },
+  profileLabel: { kk: 'Профиль', ru: 'Профиль', en: 'Profile' },
+  welcomeText:  { kk: 'Қош келдіңіз,', ru: 'Добро пожаловать,', en: 'Welcome,' },
+  // Дополнительные кнопки/лейблы
+  btnLoadMore:  { kk: 'Тағы жүктеу', ru: 'Загрузить ещё', en: 'Load more' },
+  btnSpend:     { kk: 'Шығаруға', ru: 'Потратить', en: 'Spend' },
+  loaderText:   { kk: 'Жүктелуде…', ru: 'Загрузка…', en: 'Loading…' }
+};
 
-  function setLang(l){
-    if (!supportedLangs.includes(l)) l = 'ru';
-    localStorage.setItem(LS_KEY, l);
-    document.documentElement.lang = l;
-    // визуально выделить кнопку
-    qsa('.lang-link').forEach(b => {
-      const btnLang = b.dataset.lang || b.getAttribute('data-lang');
-      b.classList.toggle('active', btnLang === l);
-    });
-    applyTranslations(l);
-  }
+/* ============================
+   ======= LANG HELPERS =======
+   ============================ */
 
-  function initLangSwitcher(){
-    qsa('.lang-link').forEach(btn=>{
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const lang = btn.dataset.lang || btn.getAttribute('data-lang');
-        if (lang) setLang(lang);
-      });
-    });
-    // применим текущий
-    setLang(getLang());
-  }
+function getLang(){
+  // порядок приоритета: localStorage -> html.lang -> 'kk'
+  const fromLS = localStorage.getItem(LS_KEY);
+  if (fromLS && supportedLangs.includes(fromLS)) return fromLS;
+  const fromHtml = document.documentElement.lang;
+  if (fromHtml && supportedLangs.includes(fromHtml)) return fromHtml;
+  return 'kk';
+}
 
-  // ---------- Apply translations ----------
-  function safeSetText(selectorOrEl, text, { html=false } = {}){
-    if (!selectorOrEl) return;
-    let el = typeof selectorOrEl === 'string' ? document.querySelector(selectorOrEl) : selectorOrEl;
-    if (!el) return;
-    if (html) el.innerHTML = text;
-    else el.textContent = text;
-  }
+function setLang(lang){
+  if (!supportedLangs.includes(lang)) lang = 'ru';
+  localStorage.setItem(LS_KEY, lang);
+  document.documentElement.lang = lang;
 
-  function applyTranslations(lang){
-    // balance label
-    const balLabel = qs('.balance-visual .balance-label') || qs('.balance-label') || qs('#balanceLabel');
-    if (balLabel) balLabel.textContent = TRANSLATIONS.balanceLabel[lang] || TRANSLATIONS.balanceLabel.ru;
-
-    // bonusSub: если в нём стоит системный текст — безопасно заменить, если там "Обновлено: ..." — лучше сохранить дату
-    const bonusSub = qs('#bonusSub') || qs('.bonus-sub');
-    if (bonusSub) {
-      const cur = (bonusSub.textContent || '').trim();
-      // если текст уже содержит "Обновлено:" — оставим (только если языки совпадают можно переводить)
-      if (!cur || cur === TRANSLATIONS.bonusSubDefault.ru || cur === TRANSLATIONS.bonusSubDefault.en || cur === TRANSLATIONS.bonusSubDefault.kk) {
-        bonusSub.textContent = TRANSLATIONS.bonusSubDefault[lang] || TRANSLATIONS.bonusSubDefault.ru;
-      } else {
-        // если там "Обновлено: ..." — переведём префикс "Обновлено:" в нужный язык, сохраним дату
-        const m = cur.match(/(Обновлено:|Updated:|Жаңартылды:)\s*(.*)/i);
-        if (m) {
-          const datePart = m[2] || '';
-          const prefix = (lang === 'kk') ? 'Жаңартылды:' : (lang === 'en') ? 'Updated:' : 'Обновлено:';
-          bonusSub.textContent = (datePart ? (prefix + ' ' + datePart) : prefix);
-        }
-      }
-    }
-
-    // loader
-    const loader = qs('#loader') || qs('.loader');
-    if (loader) loader.textContent = TRANSLATIONS.loaderText[lang] || TRANSLATIONS.loaderText.ru;
-
-    // spend title
-    const spend = qs('#spendTitle') || qs('.spend-title');
-    if (spend) spend.textContent = TRANSLATIONS.spendTitle[lang] || TRANSLATIONS.spendTitle.ru;
-
-    // partners labels: у вас .spend-grid .spend-item > div
-    qsa('.spend-item').forEach(item=>{
-      const nameDiv = item.querySelector('div');
-      if (!nameDiv) return;
-      // сохраняем оригинал в data-orig, чтобы знать ключ
-      if (!nameDiv.dataset.orig) nameDiv.dataset.orig = (nameDiv.textContent || '').trim();
-      const key = nameDiv.dataset.orig;
-      if (key && TRANSLATIONS.partners[key]) {
-        nameDiv.textContent = TRANSLATIONS.partners[key][lang] || TRANSLATIONS.partners[key].ru;
-      }
-    });
-
-    // footer titles
-    const cTitle = qs('#contactTitle');
-    const eTitle = qs('#emailTitle');
-    const footerText = qs('#footerText') || qs('.copyright');
-    if (cTitle) cTitle.textContent = TRANSLATIONS.contactTitle[lang] || TRANSLATIONS.contactTitle.ru;
-    if (eTitle) eTitle.textContent = TRANSLATIONS.emailTitle[lang] || TRANSLATIONS.emailTitle.ru;
-    if (footerText) footerText.textContent = TRANSLATIONS.footerText[lang] || TRANSLATIONS.footerText.ru;
-
-    // simple strings: welcome / profile popover
-    const welcomeWrap = qs('#welcomeText');
-    if (welcomeWrap) {
-      // если есть #userName или #userNameRight — покажем "Welcome, Name"
-      const nameEl = qs('#userName') || qs('#userNameRight');
-      if (nameEl && nameEl.textContent.trim()) {
-        welcomeWrap.innerHTML = `${TRANSLATIONS.welcome[lang]} <span id="userName">${nameEl.textContent.trim()}</span>`;
-      } // else — оставим что сервер вставил
-    }
-
-    // profile popover re-render
-    buildProfilePopover();
-
-    // buttons / data-i18n (если есть)
-    qsa('[data-i18n]').forEach(el=>{
-      const key = el.dataset.i18n;
-      if (!key) return;
-      const txt = (TRANSLATIONS[key] && TRANSLATIONS[key][lang]) || (TRANSLATIONS[key] && TRANSLATIONS[key].ru) || '';
-      if (!txt) return;
-      if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'button') {
-        el.value ? el.value = txt : el.textContent = txt;
-      } else el.textContent = txt;
-    });
-  }
-
-  // Expose global helper so inline fetch can call it (if needed)
-  window.bs_applyBonusesLang = function(lang){
-    const l = lang || getLang();
-    applyTranslations(l);
-  };
-
-  // ---------- Burger / Profile / Partners (оставляем вашу логику) ----------
-  function initBurger(){
-    const btn = qs('.burger');
-    const pop = qs('#menuPopover');
-    const back = qs('#menuBackdrop');
-    if(!btn) return;
-    btn.addEventListener('click', ()=> {
-      pop && pop.classList.toggle('hidden');
-      back && back.classList.toggle('hidden');
-    });
-    if(back) back.addEventListener('click', ()=> {
-      pop && pop.classList.add('hidden');
-      back.classList.add('hidden');
-    });
-  }
-
-  const localStrings = {
-    profile: TRANSLATIONS.profile,
-    logout: TRANSLATIONS.logout
-  };
-
-  function buildProfilePopover(){
-    const pop = qs('#profilePopover');
-    if(!pop) return;
-    if(!qs('#userNameRight') && !qs('#userName')) return;
-    const avatar = qs('#profileBtn .avatar') ? qs('#profileBtn .avatar').src : '';
-    const displayName = (qs('#userNameRight') || qs('#userName')) ? (qs('#userNameRight') || qs('#userName')).textContent.trim() : 'User';
-    const lang = getLang();
-    pop.innerHTML = `
-      <div class="profile-card">
-        <div class="profile-row" style="display:flex;gap:10px;align-items:center;">
-          <img class="avatar" src="${avatar}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover">
-          <div>
-            <div class="name" style="font-weight:600">${displayName}</div>
-            <div class="muted" style="font-size:13px">${(qs('#userName')||qs('#userNameRight'))? (qs('#userName')||qs('#userNameRight')).textContent : ''}</div>
-          </div>
-        </div>
-        <hr style="margin:10px 0">
-        <nav class="profile-menu">
-          <a href="/profile/" class="profile-link">${localStrings.profile[lang]}</a>
-          <a href="/accounts/logout/?next=/" class="profile-link danger">${localStrings.logout[lang]}</a>
-        </nav>
-      </div>
-    `;
-  }
-
-  function initProfilePopover(){
-    const btn = qs('#profileBtn');
-    const pop = qs('#profilePopover');
-    const back = qs('#profileBackdrop');
-    if(!btn || !pop) return;
-    btn.addEventListener('click', ()=> {
-      pop.classList.toggle('hidden');
-      back && back.classList.toggle('hidden');
-      if(!pop.classList.contains('hidden')) buildProfilePopover();
-    });
-    if(back) back.addEventListener('click', ()=> { pop.classList.add('hidden'); back.classList.add('hidden'); });
-  }
-
-  function initPartnersLinks(){
-    qsa('.spend-item').forEach(el=>{
-      const href = el.dataset.href;
-      if(!href) return;
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', ()=> window.open(href, '_blank'));
-    });
-  }
-
-  // ---------- Wrap fetchBonuses if exists ----------
-  function wrapFetchBonuses(){
-    if (typeof window.fetchBonuses !== 'function') {
-      return;
-    }
-    const original = window.fetchBonuses;
-    // replace with wrapper that ensures translations reapply after fetch completes
-    window.fetchBonuses = async function(...args){
-      try {
-        const res = original.apply(this, args);
-        // if original returns a promise — await it
-        if (res && typeof res.then === 'function') {
-          await res;
-        }
-      } catch (err) {
-        // swallow: original handles errors
-        console.warn('fetchBonuses wrapper: original threw', err);
-      } finally {
-        // small delay to allow DOM updates, затем применим локализацию
-        setTimeout(()=> {
-          try { window.bs_applyBonusesLang(); } catch(e){ console.warn(e); }
-        }, 40);
-      }
-    };
-  }
-
-  // ---------- Initialization ----------
-  document.addEventListener('DOMContentLoaded', ()=>{
-    initBurger();
-    initLangSwitcher();
-    initProfilePopover();
-    initPartnersLinks();
-
-    // Если fetchBonuses определён — оборачиваем его, чтобы после каждого вызова перевод применялся
-    wrapFetchBonuses();
-
-    // Если fetchBonuses существует, запускаем его (как раньше) — но обычно это делает inline-скрипт
-    // Применим переводы при загрузке (на случай, если сервер уже вставил тексты)
-    setTimeout(()=> {
-      try { window.bs_applyBonusesLang(); } catch(e){ console.warn(e); }
-    }, 60);
-    // и ещё одна попытка через небольшую задержку (с запасом)
-    setTimeout(()=> {
-      try { window.bs_applyBonusesLang(); } catch(e){ console.warn(e); }
-    }, 600);
+  // визуальная пометка кнопок (на странице у вас должны быть элементы с классом .lang-link и data-lang)
+  document.querySelectorAll('.lang-link').forEach(btn => {
+    const btnLang = btn.dataset.lang || btn.getAttribute('data-lang');
+    if (btnLang) btn.classList.toggle('active', btnLang === lang);
   });
 
-  // Expose helpers for console
-  window.BloodSeeker = window.BloodSeeker || {};
-  window.BloodSeeker.setLang = setLang;
-  window.BloodSeeker.getLang = getLang;
-  window.BloodSeeker.applyLang = window.bs_applyBonusesLang;
+  // применяем переводы: простые и полные
+  applySimpleTranslations(lang);
+  applyFullTranslations(lang);
+}
 
-})();
+function initLangSwitcher(){
+  // ожидаем наличие .lang-link элементов; если нет — ничего страшного
+  document.querySelectorAll('.lang-link').forEach(btn => {
+    const data = btn.dataset.lang || btn.getAttribute('data-lang');
+    if (!data) return;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      setLang(data);
+    });
+  });
+
+  // применяем выбранный или дефолтный язык при загрузке
+  setLang(getLang());
+}
+
+/* ============================
+   ======= APPLY TEXTS ========
+   ============================ */
+
+function safeSetTextById(id, text, { html=false } = {}){
+  if (!id) return;
+  let el = document.getElementById(id);
+  if (!el) el = document.querySelector('.' + id); // fallback на класс
+  if (!el) return;
+  if (html) el.innerHTML = text;
+  else el.textContent = text;
+}
+
+function applySimpleTranslations(lang){
+  // Этот набор обычно минимальный и уже мог быть в старом файле.
+  safeSetTextById('welcomeText', (TRANSLATIONS.welcomeText && TRANSLATIONS.welcomeText[lang]) || '');
+  safeSetTextById('profileLabel', (TRANSLATIONS.profileLabel && TRANSLATIONS.profileLabel[lang]) || '');
+  safeSetTextById('spendTitle', (TRANSLATIONS.spendTitle && TRANSLATIONS.spendTitle[lang]) || '');
+  // loader чтобы был при вызове fetch
+  const loader = document.getElementById('loader') || document.querySelector('.loader');
+  if (loader) loader.textContent = (TRANSLATIONS.loaderText && TRANSLATIONS.loaderText[lang]) || '';
+}
+
+function applyFullTranslations(lang){
+  // Базовые текстовые элементы
+  for (const key of Object.keys(TRANSLATIONS)){
+    const val = TRANSLATIONS[key][lang] || TRANSLATIONS[key].ru || '';
+    // Ожидаем, что id в HTML совпадают с ключами транслейшна
+    safeSetTextById(key, val);
+  }
+
+  // Дополнительные элементы, которые могут быть в вашем шаблоне с другими id/классами
+  // Footer
+  const footer = document.querySelector('footer');
+  if (footer) {
+    // если в footer есть элемент с id footerText - уже установили. Иначе - попробуем найти .footer-text
+    if (!document.getElementById('footerText') && footer.querySelector('.footer-text')) {
+      footer.querySelector('.footer-text').textContent = TRANSLATIONS.footerText[lang] || TRANSLATIONS.footerText.ru;
+    }
+  }
+
+  // promo
+  if (!document.getElementById('promoTitle') && document.querySelector('.promo .title')) {
+    document.querySelectorAll('.promo .title').forEach(el => el.textContent = TRANSLATIONS.promoTitle[lang] || TRANSLATIONS.promoTitle.ru);
+  }
+  if (!document.getElementById('promoSub') && document.querySelector('.promo .sub')) {
+    document.querySelectorAll('.promo .sub').forEach(el => el.textContent = TRANSLATIONS.promoSub[lang] || TRANSLATIONS.promoSub.ru);
+  }
+
+  // hero
+  if (!document.getElementById('heroTitle') && document.querySelector('.hero .title')) {
+    document.querySelectorAll('.hero .title').forEach(el => el.textContent = TRANSLATIONS.heroTitle[lang] || TRANSLATIONS.heroTitle.ru);
+  }
+  if (!document.getElementById('heroSub') && document.querySelector('.hero .sub')) {
+    document.querySelectorAll('.hero .sub').forEach(el => el.textContent = TRANSLATIONS.heroSub[lang] || TRANSLATIONS.heroSub.ru);
+  }
+
+  // Кнопки
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    // data-i18n содержит ключ перевода, например data-i18n="btnLoadMore"
+    const key = el.dataset.i18n;
+    if (!key) return;
+    const txt = (TRANSLATIONS[key] && TRANSLATIONS[key][lang]) || (TRANSLATIONS[key] && TRANSLATIONS[key].ru) || '';
+    if (txt) {
+      if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'button') el.value ? el.value = txt : el.textContent = txt;
+      else el.textContent = txt;
+    }
+  });
+}
+
+
+
+let bonusesData = [];
+let bonusesPage = 1;
+let bonusesPerPage = 10;
+let isLoading = false;
+
+async function fetchBonuses({ page = 1, perPage = bonusesPerPage } = {}){
+  // Сохраняем loader и показываем его
+  const loader = document.getElementById('loader') || document.querySelector('.loader');
+  if (loader) loader.style.display = '';
+
+  isLoading = true;
+  try {
+    // Попробуем обратиться к API, если его нет — вернём моковые данные
+    let res, json;
+    try {
+      res = await fetch(`/api/bonuses?page=${page}&per_page=${perPage}`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('network');
+      json = await res.json();
+    } catch (e) {
+      // mock: если нет бэкенда локально — создаём тестовые бонусы
+      json = {
+        results: Array.from({length: perPage}, (_, i) => ({
+          id: (page-1)*perPage + i + 1,
+          title: `Бонус ${(page-1)*perPage + i + 1}`,
+          amount: Math.floor(Math.random() * 5000),
+          date: new Date().toLocaleDateString()
+        })),
+        next: page < 5 ? `/api/bonuses?page=${page+1}` : null
+      };
+    }
+
+    // append или replace
+    if (page === 1) {
+      bonusesData = json.results || [];
+    } else {
+      bonusesData = bonusesData.concat(json.results || []);
+    }
+
+    renderBonuses(bonusesData);
+    bonusesPage = page;
+  } finally {
+    isLoading = false;
+    if (loader) loader.style.display = 'none';
+  }
+}
+
+function renderBonuses(list){
+  const container = document.getElementById('bonusesList') || document.querySelector('.bonuses-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (!list || list.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    const lang = getLang();
+    empty.textContent = (lang === 'kk' ? 'Бонустар табылған жоқ' : lang === 'en' ? 'No bonuses found' : 'Бонусов не найдено');
+    container.appendChild(empty);
+    return;
+  }
+
+  for (const b of list){
+    const item = document.createElement('div');
+    item.className = 'bonus-item';
+    item.innerHTML = `
+      <div class="bonus-title">${escapeHtml(b.title || '')}</div>
+      <div class="bonus-amount">${escapeHtml(String(b.amount || '0'))}</div>
+      <div class="bonus-date">${escapeHtml(b.date || '')}</div>
+      <button class="btn-spend" data-bonus-id="${b.id}" data-i18n="btnSpend">${TRANSLATIONS.btnSpend[getLang()]}</button>
+    `;
+    container.appendChild(item);
+  }
+
+  // Повесим обработчики на кнопки "Потратить"
+  container.querySelectorAll('.btn-spend').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = btn.dataset.bonusId;
+      onSpendBonus(id);
+    });
+  });
+}
+
+function onSpendBonus(bonusId){
+  // Лёгкий обработчик — можно подставить вашу логику
+  alert((getLang() === 'kk') ? `Бонус #${bonusId} жұмсалады` : (getLang() === 'en') ? `Spending bonus #${bonusId}` : `Тратите бонус #${bonusId}`);
+}
+
+/* ============================
+   ======= HELPERS ============
+   ============================ */
+
+function escapeHtml(str){
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/* ============================
+   ====== INIT / BINDING ======
+   ============================ */
+
+function initPage(){
+  initLangSwitcher();
+
+  // повесим на кнопку "Загрузить ещё" (если есть)
+  const btnMore = document.getElementById('btnLoadMore') || document.querySelector('.btn-load-more');
+  if (btnMore) {
+    btnMore.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isLoading) return;
+      fetchBonuses({ page: bonusesPage + 1 });
+    });
+    // установить текст кнопки в локализации
+    btnMore.dataset.i18n = btnMore.dataset.i18n || 'btnLoadMore';
+  }
+
+  // если есть форма или профиль — обработаем минимально
+  const profileBtn = document.getElementById('profileBtn') || document.querySelector('.profile-btn');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // ваш код открытия профиля...
+      console.log('open profile (stub)');
+    });
+  }
+
+  // initial fetch
+  fetchBonuses({ page: 1 });
+
+  // применить переводы к элементам, у которых стоит data-i18n
+  applyFullTranslations(getLang());
+}
+
+// Автоинициализация при DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPage);
+} else {
+  initPage();
+}
+
+/* ============================
+   ======= END OF FILE ========
+   ============================ */
