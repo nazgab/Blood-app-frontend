@@ -247,3 +247,28 @@ def profile_view(request):
 @permission_classes([permissions.AllowAny])
 def health(request):
     return Response({"status": "ok"})
+
+from django.shortcuts import render
+from django.db.models import Q
+from core.models import DonationSession
+
+def donate_view(request):
+    q = request.GET.get("q", "").strip()
+
+    # язык интерфейса
+    lang = request.session.get("lang", "kk")
+
+    sessions = DonationSession.objects.all()
+
+    if q:
+        sessions = sessions.filter(
+            Q(description__icontains=q)
+        )
+
+    context = {
+        "sessions": sessions,
+        "query": q,
+        "lang": lang,
+    }
+    return render(request, "donate_list.html", context)
+

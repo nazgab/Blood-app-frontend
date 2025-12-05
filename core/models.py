@@ -227,3 +227,20 @@ class Employee(models.Model):
     def __str__(self):
         return f"Employee({self.employee_id}) {self.first_name} {self.last_name}"
 
+class DonationSession(models.Model):
+    session_id = models.AutoField(primary_key=True)
+
+    center = models.ForeignKey(
+        'core.BloodCenter',
+        on_delete=models.CASCADE,
+        db_column='center_id'
+    )
+
+    date = models.DateField()
+    time_from = models.TimeField(db_column='time_from')
+    time_to = models.TimeField(db_column='time_to')
+    room = models.CharField(max_length=50)
+    description = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'donation_sessions'

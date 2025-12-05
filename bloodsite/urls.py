@@ -14,6 +14,7 @@ from core.views_medic import medic_donations
 from core.views_medic import medic_users
 from core.views_pages import history
 from django.contrib.auth import views as auth_views
+from core.views import donate_view
 
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
@@ -61,6 +62,7 @@ urlpatterns = [
     path("medic/donations/", medic_donations, name="medic-donations"),
     path("medic/users/", medic_users, name="medic-users"), 
     path("history/", history, name="history"),
+    path("donate/", donate_view, name="donate"),
     
 ]
 
