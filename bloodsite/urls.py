@@ -14,6 +14,7 @@ from core.views_medic import medic_donations
 from core.views_medic import medic_users
 from core.views import donations_history
 from django.contrib.auth import views as auth_views
+from core.views import export_history
 
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
@@ -61,7 +62,7 @@ urlpatterns = [
     path("medic/donations/", medic_donations, name="medic-donations"),
     path("medic/users/", medic_users, name="medic-users"), 
     path("history/", donations_history, name="history"),
-    
+    path("history/export/", export_history, name="history-export"),
 ]
 
 if settings.DEBUG:
