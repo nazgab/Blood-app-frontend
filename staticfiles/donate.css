@@ -1,0 +1,88 @@
+/* ----- БАННЕР, как в бонусах (розовый) ----- */
+.promo-card {
+  background: #f8d9dc;
+  border-radius: 20px;
+  padding: 40px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.promo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.banner-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: #000;
+}
+
+.promo-ill img {
+  height: 200px;
+  width: auto;
+  object-fit: contain;
+}
+
+
+/* ----- ФИЛЬТР под баннером ----- */
+.donate-filter-wrapper {
+  margin-bottom: 20px;
+}
+
+.donate-filter {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #006fdd;   /* синий бордер как на скрине */
+  background: #dcdcdc;         /* более тёмно-серый фон */
+  font-size: 15px;
+}
+
+.donate-filter:focus {
+  outline: none;
+  border-color: #006fdd;
+  background: #d6d6d6;
+}
+
+
+.donate-card {
+    background: #e3e3e3;
+    border-radius: 22px;
+    padding: 22px 26px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    margin-bottom: 24px;   /* ← расстояние между карточками */
+}
+
+
+.donate-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.donate-card-date {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.donate-card-time {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.donate-card-center {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.donate-card-desc {
+  font-size: 14px;
+  color: #333;
+}

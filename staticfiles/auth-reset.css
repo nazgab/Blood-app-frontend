@@ -1,0 +1,125 @@
+/* Reset Password Page */
+
+.reset-page {
+  padding: 40px;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.reset-container {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px;
+  background: #fafafa;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.reset-left {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-illus {
+  max-width: 320px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.reset-right {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(31,45,61,0.08);
+}
+
+.reset-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0b57d0;
+}
+
+.reset-desc {
+  margin-top: 6px;
+  color: #444;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reset-label {
+  font-size: 13px;
+  color: #555;
+}
+
+.reset-input {
+  height: 44px;
+  border-radius: 8px;
+  border: 2px solid #dbe7ff;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.reset-input:focus {
+  border-color: #0b57d0;
+  box-shadow: 0 6px 16px rgba(11,87,208,0.1);
+}
+
+.reset-btn {
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: #d63b35;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(198,47,42,0.25);
+  transition: 0.15s ease;
+}
+
+.reset-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(198,47,42,0.3);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .reset-container {
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .reset-card {
+    max-width: 100%;
+  }
+
+  .reset-illus {
+    max-width: 240px;
+  }
+}

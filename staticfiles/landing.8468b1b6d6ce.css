@@ -1,0 +1,27 @@
+@media (max-width: 768px) {
+
+  /* РАСТЯГИВАЕМ белую полосу */
+  .topbar {
+    margin-left: -16px;   /* компенсирует padding .page */
+    margin-right: -16px;
+    padding: 12px 16px;   /* возвращаем внутренние отступы */
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ЯзЫки и кнопки переносятся */
+  .topbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* ОПУСКАЕМ hero-карту ниже */
+  .hero-card {
+    margin-top: 20px;
+  }
+}
