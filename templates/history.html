@@ -225,42 +225,150 @@
 
 <!-- JS Filter -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const rows = Array.from(document.querySelectorAll("#dntr-table tbody tr"));
-  const dateFilter = document.getElementById("dntr-date-filter");
-  const centerFilter = document.getElementById("dntr-center-filter");
+(function(){
+  const bar = document.getElementById('langBar');
+  if (!bar) return;
 
-  function applyFilters() {
-    const dateVal = dateFilter ? dateFilter.value : null;
-    const centerVal = centerFilter ? centerFilter.value : null;
+  // Словарь быстрых статичных переводов (подправьте при необходимости)
+  const L = {
+    kk: {
+      pageTitle: 'Қан тапсыру тарихы',
+      pageSub: 'Соңғы 6 айдағы донор белсенділігі',
+      dateFilter: ['Мерзім: Барлығы','Соңғы 30 күн','3 ай','6 ай'],
+      centerFilterFirst: 'Орталық: Барлығы',
+      export: ['XLSX','PDF','CSV'],
+      th: ['Күні','Орталық','Қан көлемі','Мәртебе','Бонус'],
+      status: { ok: 'Қабылданды', wait: 'Өңделуде', no: 'Бас тартылды' },
+      welcomePrefix: 'Қош келдіңіз,'
+    },
+    ru: {
+      pageTitle: 'История сдачи крови',
+      pageSub: 'Активность донора за последние 6 месяцев',
+      dateFilter: ['Период: Всё','Последние 30 дней','3 месяца','6 месяцев'],
+      centerFilterFirst: 'Центр: Все',
+      export: ['XLSX','PDF','CSV'],
+      th: ['Дата','Центр','Объем крови','Статус','Бонус'],
+      status: { ok: 'Принято', wait: 'В обработке', no: 'Отказано' },
+      welcomePrefix: 'Добро пожаловать,'
+    },
+    en: {
+      pageTitle: 'Donation history',
+      pageSub: 'Donor activity in the last 6 months',
+      dateFilter: ['Period: All','Last 30 days','3 months','6 months'],
+      centerFilterFirst: 'Center: All',
+      export: ['XLSX','PDF','CSV'],
+      th: ['Date','Center','Volume (ml)','Status','Bonus'],
+      status: { ok: 'Accepted', wait: 'Processing', no: 'Rejected' },
+      welcomePrefix: 'Welcome,'
+    }
+  };
 
-    rows.forEach(row => {
-      const dateText = row.children[0].innerText.trim();      // dd.mm.yyyy
-      const centerText = row.children[1].innerText.trim();    // центр из колонки
-
-      let show = true;
-
-      // 1) фильтр по дате (существующая логика; можно адаптировать по реальным датам)
-      if (dateVal === "Соңғы 30 күн" && dateText < "12.01.2025") show = false;
-      if (dateVal === "3 ай" && dateText < "12.11.2024") show = false;
-      if (dateVal === "6 ай" && dateText < "12.08.2024") show = false;
-
-      // 2) фильтр по центру: если выбрано "Орталық: Барлығы" — показываем всё,
-      // иначе сравниваем точное совпадение текста (центры рендерятся сервером)
-      if (centerVal && centerVal !== "Орталық: Барлығы" && centerText !== centerVal) {
-        show = false;
-      }
-
-      row.style.display = show ? "" : "none";
+  function setActiveButton(lang) {
+    document.querySelectorAll('.lang-link').forEach(b=>{
+      try { b.classList.toggle('active', b.dataset.lang === lang); } catch(_) {}
     });
   }
 
-  if (dateFilter) dateFilter.addEventListener("change", applyFilters);
-  if (centerFilter) centerFilter.addEventListener("change", applyFilters);
+  function localizeStatic(lang) {
+    const map = L[lang] || L.ru;
+    const h1 = document.querySelector('.dntr-title');
+    if (h1) h1.textContent = map.pageTitle;
+    const sub = document.querySelector('.dntr-sub');
+    if (sub) sub.textContent = map.pageSub;
 
-  // запуск один раз при загрузке (если по умолчанию need filter)
-  applyFilters();
-});
+    // table headers
+    const ths = document.querySelectorAll('#dntr-table thead th');
+    map.th.forEach((t,i)=>{ if (ths[i]) ths[i].textContent = t; });
+
+    // date filter options
+    const dateFilter = document.getElementById('dntr-date-filter');
+    if (dateFilter) {
+      map.dateFilter.forEach((txt, i) => {
+        if (dateFilter.options[i]) dateFilter.options[i].text = txt;
+      });
+    }
+
+    // center filter first option
+    const centerFilter = document.getElementById('dntr-center-filter');
+    if (centerFilter && centerFilter.options.length>0) centerFilter.options[0].text = map.centerFilterFirst;
+
+    // export buttons (если они в порядке XLSX, PDF, CSV)
+    const exports = document.querySelectorAll('.dntr-export-btn');
+    exports.forEach((el, idx) => {
+      if (map.export[idx]) el.textContent = map.export[idx];
+    });
+
+    // status badges
+    document.querySelectorAll('.dntr-status').forEach(span=>{
+      if (span.classList.contains('dntr-ok')) span.textContent = map.status.ok;
+      else if (span.classList.contains('dntr-wait')) span.textContent = map.status.wait;
+      else if (span.classList.contains('dntr-no')) span.textContent = map.status.no;
+    });
+
+    // footer titles (fallback — home.js может переписать позже)
+    const contactTitle = document.getElementById('contactTitle');
+    const emailTitle = document.getElementById('emailTitle');
+    if (contactTitle) contactTitle.textContent = (lang==='kk'?'Қолдау': lang==='en'?'Support':'Контакты');
+    if (emailTitle) emailTitle.textContent = (lang==='kk'?'Эл. пошта': 'Email');
+
+    // welcome prefix — сохраняем имя
+    const wrap = document.getElementById('welcomeText');
+    if (wrap) {
+      let nameEl = wrap.querySelector('#userName') || wrap.querySelector('#userNameRight') || wrap.querySelector('strong, span, b');
+      const username = nameEl ? nameEl.textContent.trim() : '';
+      if (username) {
+        const preserved = nameEl ? nameEl.cloneNode(true) : null;
+        wrap.innerHTML = '';
+        wrap.appendChild(document.createTextNode((map.welcomePrefix || '') + ' '));
+        if (preserved) wrap.appendChild(preserved);
+      }
+    }
+
+    // синхронизируем #langSelector если он есть
+    const sel = document.getElementById('langSelector');
+    if (sel) sel.value = lang;
+  }
+
+  function changeLang(newLang) {
+    if (!newLang) return;
+    window.lang = newLang;
+    document.documentElement.lang = newLang;
+    setActiveButton(newLang);
+    localizeStatic(newLang);
+
+    if (typeof refresh === 'function') {
+      try { refresh().catch(()=>{}); } catch(e){ console.warn(e); }
+    } else {
+      // попытка вызвать отдельные функции, если они есть
+      if (typeof setContactTitlesByLang === 'function') try{ setContactTitlesByLang(); }catch(e){}
+      if (typeof setWelcomeByLang === 'function') try{ setWelcomeByLang(); }catch(e){}
+      if (typeof setPromoByLang === 'function') try{ setPromoByLang(); }catch(e){}
+    }
+  }
+
+  // Инициализация — берем active кнопку или html.lang или 'kk'
+  const initLang = document.querySelector('.lang-link.active')?.dataset.lang || document.documentElement.lang || window.lang || 'kk';
+  setActiveButton(initLang);
+  localizeStatic(initLang);
+  window.lang = initLang;
+  document.documentElement.lang = initLang;
+
+  // Делегированно слушаем клики в #langBar
+  bar.addEventListener('click', function(e){
+    const btn = e.target.closest && e.target.closest('.lang-link');
+    if (!btn) return;
+    const lng = btn.dataset.lang || (btn.textContent||'').trim().toLowerCase().slice(0,2);
+    if (!lng) return;
+    changeLang(lng);
+  }, {capture:false});
+
+  // Если есть селект тоже — синхронизируем при его изменении
+  const sel = document.getElementById('langSelector');
+  if (sel) {
+    sel.addEventListener('change', (e)=> changeLang(e.target.value));
+  }
+
+})();
 </script>
 
 <!-- подключаем общий скрипт, он использует id'ы выше -->

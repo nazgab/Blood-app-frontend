@@ -18,6 +18,7 @@ from django.contrib.auth import views as auth_views
 from core.views import donate_view
 
 from core.views import export_history
+from core.views import password_change_view
 
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
@@ -67,6 +68,8 @@ urlpatterns = [
     path("donate/", donate_view, name="donate"),
     path("history/", donations_history, name="history"),
     path("history/export/", export_history, name="history-export"),
+    path("accounts/password_change/", password_change_view, name="password_change"),
+    path("accounts/password_change/done/", auth_views.PasswordChangeDoneView.as_view(template_name="registration/password_change_done.html"), name="password_change_done"),
 ]
 
 if settings.DEBUG:

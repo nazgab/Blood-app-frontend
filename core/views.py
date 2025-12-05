@@ -20,11 +20,15 @@ from .serializers import (
     ContactChannelSerializer, BonusAccountSerializer, RegisterSerializer,
     AboutSectionSerializer,
 )
-import io
 import csv
-import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
+import io, csv
+from django.contrib import messages
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import render, redirect
+
 class AboutSectionView(generics.RetrieveAPIView):
     queryset = AboutSection.objects.all()
     serializer_class = AboutSectionSerializer
@@ -573,3 +577,33 @@ def donate_view(request):
     }
     return render(request, "donate_list.html", context)
 
+@login_required
+def password_change_view(request):
+    """
+    Надёжная замена стандартного PasswordChangeView.
+    - показывает форму
+    - валидирует
+    - сохраняет пароль и обновляет сессию
+    - логирует ошибки в консоль (при DEBUG=True видно traceback)
+    """
+    if request.method == "POST":
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()  # сохранение пароля
+                update_session_auth_hash(request, user)  # чтобы сессия не разлогинила пользователя
+                messages.success(request, "Пароль успешно изменён.")
+                return redirect('password_change_done')  # стандартный url name
+            except Exception as e:
+                # лог в консоль — при DEBUG увидим traceback
+                import traceback, sys
+                print("Error during password change save:", e, file=sys.stderr)
+                traceback.print_exc()
+                messages.error(request, "Ошибка на сервере при сохранении пароля.")
+        else:
+            # валидатор вернул ошибки — покажем их в шаблоне (шаблон ниже их рендерит)
+            messages.error(request, "Проверьте форму — есть ошибки.")
+    else:
+        form = PasswordChangeForm(user=request.user)
+
+    return render(request, "registration/password_change_form.html", {"form": form})

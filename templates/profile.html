@@ -24,7 +24,7 @@
 </aside>
 
 <div id="menuPopover" class="menu-popover hidden"></div>
-<div id="menuBackdrop" class="menu-backdrop hidden"></div>
+<div id="menuBackdrop" class="menu-backdrop hidden"></div>  
 
 <div class="page">
   <header class="topbar">
@@ -95,7 +95,7 @@
       {% if profile and profile.role|default:""|lower == "medic" %}
         <section class="card">
           <h3 data-i18n="personal_h3">Персональные данные</h3>
-          <button class="btn-change-password" type="button" data-i18n="change_password">Изменить пароль</button>
+          <a class="btn-change-password" href="{% url 'password_change' %}">{{ "Изменить пароль" }}</a>
 
           <div class="personal-grid">
             <div>
@@ -149,7 +149,10 @@
       {% else %}
         <section class="card">
           <h3 data-i18n="personal_h3">Персональные данные</h3>
-          <button class="btn-change-password" type="button" data-i18n="change_password">Изменить пароль</button>
+          <a class="btn-change-password" href="{% url 'password_change' %}" data-i18n="change_password">
+            Изменить пароль
+          </a>
+
 
           <div class="personal-grid">
             <div>
