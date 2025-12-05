@@ -1,0 +1,49 @@
+/* ===== mobile_home.css (добавить в конец) ===== */
+@media (max-width: 768px) {
+
+  /* Универсальное масштабирование картинок */
+  img { max-width: 100%; height: auto; display: block; }
+
+  /* Topbar: растянуть по ширине контентной зоны и вынести за padding .page */
+  .topbar {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 12px 16px;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+    z-index: 5;
+  }
+
+  /* Обеспечиваем перенос контролов (языки, кнопки) */
+  .topbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .langs { display:flex; gap:8px; align-items:center; }
+  .langs .sep { display:none; } /* скрыть вертикальные разделители на мобилке */
+
+  /* Стили для кнопок авторизации компактнее */
+  .auth-buttons { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
+  .btn-auth { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; padding:6px 10px; border-radius:10px; font-size:13px; }
+  .btn-auth-primary { background:#d93a3a; color:#fff; }
+  .btn-auth-outline { background:#fff; color:#222; border:1px solid rgba(0,0,0,0.08); }
+
+  /* Отступ между полосой и героем — чтобы розовый блок не перекрывался */
+  .hero-card { margin-top: 16px; z-index:1; }
+
+  /* Уменьшить аватар/иконки */
+  .avatar { width:34px; height:34px; object-fit:cover; border-radius:6px; }
+
+  /* Общие отступы и размер шрифта на мобилке */
+  body { font-size:14px; }
+  .container { padding-left:12px; padding-right:12px; box-sizing:border-box; }
+}

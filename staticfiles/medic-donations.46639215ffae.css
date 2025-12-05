@@ -1,0 +1,51 @@
+/* medic-donations.css — стиль формы как в макете */
+.red-title {
+  color: #d12a22;
+  font-size: 34px;
+  margin: 18px 0 24px;
+  font-weight: 700;
+}
+
+.card.donation-form {
+  background: #fff;
+  padding: 26px 28px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  max-width: 760px;
+}
+
+.row-field {
+  margin-bottom: 20px;
+}
+
+.row-field select,
+.row-field input[type="text"],
+.row-field input[type="tel"] {
+  width: 100%;
+  padding: 18px 20px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  font-size: 18px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.04) inset;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden; clip: rect(1px, 1px, 1px, 1px);
+}
+
+.btn-red {
+  background: linear-gradient(#d33, #c12);
+  border: none;
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 10px 18px rgba(209, 42, 34, 0.18);
+  cursor: pointer;
+}
+
+.btn-red:hover { filter: brightness(0.98); }
+.muted { color: #6b6b6b; font-size: 14px; }

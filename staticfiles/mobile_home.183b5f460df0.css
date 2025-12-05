@@ -1,0 +1,44 @@
+/* Сделаем hero-блок вертикальным */
+.hero-card {
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.hero-text, .hero-ill {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.hero-ill img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Уменьшим отступы и шрифт */
+body {
+  font-size: 14px;
+  padding: 0 10px;
+}
+
+.container {
+  padding: 0 10px;
+}
+
+/* Адаптивное меню */
+.nav-links {
+  display: none;
+}
+
+.burger {
+  display: on;
+}
+
+/* Сделаем форму отзывов, футер и блоки контента «жидкими» */
+.feedback-form, .about-us, .blood-info {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
