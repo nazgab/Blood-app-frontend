@@ -28,7 +28,7 @@
 
     <!-- Верх -->
     <header class="topbar">
-      <div class="welcome">
+      <div class="welcome" id="welcomeText">
         {% if user.is_authenticated %}
           Қош келдіңіз, <strong id="userName">{{ user.get_full_name|default:user.username }}</strong>
         {% else %}
@@ -37,16 +37,17 @@
       </div>
 
       <div class="topbar-right">
-        <div class="langs">
-          <button class="lang-link">KK</button> | 
-          <button class="lang-link">RU</button> | 
-          <button class="lang-link">EN</button>
+        <div class="langs" id="langBar">
+          <!-- добавлены data-lang, как ожидает home.js -->
+          <button class="lang-link" data-lang="kk">KK</button> |
+          <button class="lang-link" data-lang="ru">RU</button> |
+          <button class="lang-link" data-lang="en">EN</button>
         </div>
 
         {% if user.is_authenticated %}
           <button class="user" id="profileBtn">
             <img class="avatar" src="{% static 'avatar.jfif' %}" alt="">
-            <span>{{ user.first_name|default:user.username }}</span>
+            <span id="userNameRight">{{ user.first_name|default:user.username }}</span>
           </button>
         {% endif %}
       </div>
@@ -110,29 +111,38 @@
           </thead>
 
           <tbody>
-            <tr>
-              <td>12.02.2025</td>
-              <td>Ұлттық қан орталығы</td>
-              <td>450 мл</td>
-              <td><span class="dntr-status dntr-ok">Қабылданды</span></td>
-              <td>+300 pts</td>
-            </tr>
-
-            <tr>
-              <td>05.01.2025</td>
-              <td>№1 қан орталығы</td>
-              <td>450 мл</td>
-              <td><span class="dntr-status dntr-wait">Өңделуде</span></td>
-              <td>-</td>
-            </tr>
-
-            <tr>
-              <td>19.11.2024</td>
-              <td>Ұлттық қан банкі</td>
-              <td>450 мл</td>
-              <td><span class="dntr-status dntr-no">Бас тартылды</span></td>
-              <td>0</td>
-            </tr>
+            {% if donations %}
+              {% for d in donations %}
+                <tr>
+                  <td>{{ d.donation_date|date:"d.m.Y" }}</td>
+                  <td>{{ d.center_name }}</td>
+                  <td>{{ d.volume_ml }} мл</td>
+                  <td>
+                    {% if d.confirmed is True %}
+                      <span class="dntr-status dntr-ok">Қабылданды</span>
+                    {% elif d.confirmed is False %}
+                      <span class="dntr-status dntr-no">Бас тартылды</span>
+                    {% else %}
+                      <span class="dntr-status dntr-wait">Өңделуде</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% comment %} убрал |int — предполагаем, что view уже привёл bonus_points к int {% endcomment %}
+                    {% if d.bonus_points and d.bonus_points > 0 %}
+                      +{{ d.bonus_points }} pts
+                    {% elif d.bonus_points == 0 %}
+                      0
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5">Жазбалар табылмады / Нет записей</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
 
@@ -146,23 +156,40 @@
       <div class="footer-inner">
         <div class="footer-cards">
           <div class="footer-card">
-            <div class="footer-title">Контакты</div>
-            <div class="footer-sub">+7 700 000 00 00</div>
+            <!-- добавлены id'ы, которые home.js ищет -->
+            <div class="footer-title" id="contactTitle">Контакты</div>
+            <div class="footer-sub" id="contactPhone">+7 700 000 00 00</div>
           </div>
           <div class="footer-card">
-            <div class="footer-title">Email</div>
-            <div class="footer-sub">support@example.kz</div>
+            <div class="footer-title" id="emailTitle">Email</div>
+            <div class="footer-sub" id="contactEmail">support@example.kz</div>
           </div>
         </div>
       </div>
-      <div class="copyright">© 2025 BloodSeeker</div>
+      <div class="copyright" id="footerText">© 2025 BloodSeeker</div>
     </footer>
   </div>
 
 
 <!-- STYLE -->
 <style>
-  .dntr-content {min-height: calc(100vh - 240px);}
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .page {
+    flex: 1; /* контент растягивается */
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    flex: 1; /* ТАБЛИЦА растягивается */
+  }
+
   .dntr-container{padding:20px;font-family:'Poppins',sans-serif;}
   .dntr-title{font-size:26px;font-weight:600;margin-bottom:4px;}
   .dntr-sub{color:#777;margin-bottom:18px;font-size:14px;}
@@ -215,6 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+<!-- подключаем общий скрипт, он использует id'ы выше -->
 <script defer src="{% static 'home.js' %}"></script>
 
 </body>

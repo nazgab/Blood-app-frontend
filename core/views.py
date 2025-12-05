@@ -7,7 +7,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.shortcuts import render
+from django.db import connection
+from django.contrib.auth.decorators import login_required
 from .models import (
     SiteConfig, MenuItem, HeroBlock, Article, BloodCenter,
     ContactChannel, BonusAccount, AboutSection,
@@ -242,6 +244,119 @@ def profile_view(request):
     print(os.path.abspath(tpl.origin.name))
     print("==========================")
 
+try:
+    from core.models import Donation, Center  # поменяйте путь если модели в другом приложении
+    ORM_AVAILABLE = True
+except Exception:
+    Donation = None
+    Center = None
+    ORM_AVAILABLE = False
+
+# Попытка импортировать legacy user (у вас есть LegacyUser)
+try:
+    from core.legacy_models import LegacyUser
+except Exception:
+    try:
+        from legacy_models import LegacyUser
+    except Exception:
+        LegacyUser = None
+
+@login_required
+def donations_history(request):
+    """
+    Показать историю доноров для текущего пользователя.
+    Логика получения user_id:
+     - сначала пытаемcя найти соответствие в LegacyUser (если есть) по email и брать legacy.user_id,
+     - иначе используем request.user.id (обычный Django id).
+    Далее получаем список пожертвований (donations) JOIN centers и отдаём в шаблон.
+    """
+    # определяем какой user_id в таблице donations использовать
+    legacy_user_id = None
+    if LegacyUser and request.user and request.user.email:
+        try:
+            lu = LegacyUser.objects.filter(email__iexact=request.user.email).first()
+            if lu:
+                # в вашей legacy модели поле называется user_id (вы показывали)
+                legacy_user_id = getattr(lu, 'user_id', None)
+        except Exception:
+            legacy_user_id = None
+
+    # если legacy найден — используем его id, иначе используем django user id
+    user_id_for_query = legacy_user_id if legacy_user_id is not None else getattr(request.user, 'id', None)
+
+    donations = []
+
+    # 1) Попробуем через ORM, если модель найдена и поле names совпадают
+    if ORM_AVAILABLE:
+        try:
+            # Попробуйте изменить фильтр, если в модели поле называется по-другому (user_id / user)
+            qs = Donation.objects.filter(user_id=user_id_for_query).order_by('-donation_date')[:200]
+            # если у вас есть ForeignKey к центру: select_related('center')
+            try:
+                qs = qs.select_related('center')
+            except Exception:
+                pass
+
+            for d in qs:
+                center_name = ''
+                # если у модели есть FK center — возьмём его имя
+                if hasattr(d, 'center') and d.center:
+                    center_name = getattr(d.center, 'center_name', getattr(d.center, 'name', '') )
+                else:
+                    # возможно center_id поле
+                    if hasattr(d, 'center_id'):
+                        # попытаемся найти центр через ORM Center, если есть модель
+                        try:
+                            if Center:
+                                c = Center.objects.filter(center_id=d.center_id).first()
+                                center_name = getattr(c, 'center_name', '') if c else ''
+                        except Exception:
+                            center_name = ''
+                donations.append({
+                    'donation_id': getattr(d, 'donation_id', getattr(d, 'id', None)),
+                    'donation_date': getattr(d, 'donation_date', getattr(d, 'date', None)),
+                    'volume_ml': getattr(d, 'volume_ml', getattr(d, 'volume', None)),
+                    'confirmed': getattr(d, 'confirmed', None),
+                    'bonus_points': int(getattr(d, 'bonus_points', 0) or 0),
+                    'center_name': center_name,
+                })
+        except Exception:
+            # упал ORM — упадём в raw SQL ниже
+            donations = []
+
+    # 2) Если ORM не сработал или не дал данных — делаем raw SQL (надежно)
+    if not donations:
+        tbl_d = 'donations'
+        tbl_c = 'centers'
+        sql = f"""
+        SELECT d.donation_id, d.user_id, d.center_id, d.donation_date, d.volume_ml, d.confirmed, d.bonus_points,
+               c.center_name
+        FROM {tbl_d} d
+        LEFT JOIN {tbl_c} c ON d.center_id = c.center_id
+        WHERE d.user_id = %s
+        ORDER BY d.donation_date DESC
+        LIMIT 500;
+        """
+        with connection.cursor() as c:
+            c.execute(sql, [user_id_for_query])
+            colnames = [col[0] for col in c.description] if c.description else []
+            rows = c.fetchall()
+            for row in rows:
+                # привязываем по именам колонок для устойчивости
+                r = dict(zip(colnames, row))
+                donations.append({
+                    'donation_id': r.get('donation_id'),
+                    'donation_date': r.get('donation_date'),
+                    'volume_ml': r.get('volume_ml'),
+                    'confirmed': r.get('confirmed'),
+                    'bonus_points': int(r.get('bonus_points') or 0),
+                    'center_name': r.get('center_name') or '',
+                })
+
+    # передаём в шаблон
+    return render(request, 'history.html', {
+        'donations': donations,
+    })
 
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])

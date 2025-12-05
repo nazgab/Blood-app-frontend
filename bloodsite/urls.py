@@ -12,7 +12,7 @@ from core.views_profile import profile_view
 from core.views_auth import CustomLoginView 
 from core.views_medic import medic_donations
 from core.views_medic import medic_users
-from core.views_pages import history
+from core.views import donations_history
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
@@ -60,7 +60,7 @@ urlpatterns = [
     path("profile/", profile_view, name="profile"),
     path("medic/donations/", medic_donations, name="medic-donations"),
     path("medic/users/", medic_users, name="medic-users"), 
-    path("history/", history, name="history"),
+    path("history/", donations_history, name="history"),
     
 ]
 
