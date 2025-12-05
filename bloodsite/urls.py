@@ -12,9 +12,13 @@ from core.views_profile import profile_view
 from core.views_auth import CustomLoginView 
 from core.views_medic import medic_donations
 from core.views_medic import medic_users
-from core.views_pages import history
+from core.views import donations_history
 from django.contrib.auth import views as auth_views
+<<<<<<< HEAD
 from core.views import donate_view
+=======
+from core.views import export_history
+>>>>>>> 4247e1dad969e4e1fededcbfe07972d885840684
 
 urlpatterns = [
     path("", index, name="index"),  # ← корневая, публичная
@@ -63,7 +67,8 @@ urlpatterns = [
     path("medic/users/", medic_users, name="medic-users"), 
     path("history/", history, name="history"),
     path("donate/", donate_view, name="donate"),
-    
+    path("history/", donations_history, name="history"),
+    path("history/export/", export_history, name="history-export"),
 ]
 
 if settings.DEBUG:

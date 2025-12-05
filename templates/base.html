@@ -11,12 +11,30 @@
   <meta http-equiv="Expires" content="0" />
   <!-- подключить мобильные стили, браузер применит только при ширине <= 720px -->
   <link rel="stylesheet" href="{% static 'mobile_home.css' %}" media="(max-width: 720px)">
-
+  <link rel="stylesheet" href="{% static 'home.css' %}">
   {# ОБЯЗАТЕЛЬНО: этот блок позволит подсовывать auth.css из дочерних шаблонов #}
   {% block extra_head %}{% endblock %}
 </head>
 <body data-role="{% if request.user.is_authenticated and request.user.profile.role == 'medic' %}medic{% else %}user{% endif %}">
   {% block content %}{% endblock %}
-  {% block extra_scripts %}{% endblock %}
+  <!-- Универсальный footer – обязательно те же id'ы, что ожидает home.js -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-cards">
+      <div class="footer-card">
+        <div class="footer-title" id="contactTitle">Контакты</div>
+        <div class="footer-sub" id="contactPhone">+7 700 000 00 00</div>
+      </div>
+
+      <div class="footer-card">
+        <div class="footer-title" id="emailTitle">Email</div>
+        <div class="footer-sub" id="contactEmail">support@example.kz</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="copyright" id="footerText">© 2025 BloodSeeker. Все права защищены.</div>
+</footer>
+{% block extra_scripts %}<script defer src="{% static 'home.js' %}"></script>{% endblock %}
 </body>
 </html>

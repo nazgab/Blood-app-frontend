@@ -7,7 +7,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.shortcuts import render
+from django.db import connection
+from django.contrib.auth.decorators import login_required
 from .models import (
     SiteConfig, MenuItem, HeroBlock, Article, BloodCenter,
     ContactChannel, BonusAccount, AboutSection,
@@ -18,7 +20,11 @@ from .serializers import (
     ContactChannelSerializer, BonusAccountSerializer, RegisterSerializer,
     AboutSectionSerializer,
 )
-
+import io
+import csv
+import os
+from django.conf import settings
+from django.http import HttpResponse, FileResponse
 class AboutSectionView(generics.RetrieveAPIView):
     queryset = AboutSection.objects.all()
     serializer_class = AboutSectionSerializer
@@ -242,6 +248,301 @@ def profile_view(request):
     print(os.path.abspath(tpl.origin.name))
     print("==========================")
 
+try:
+    from core.models import Donation, Center  # поменяйте путь если модели в другом приложении
+    ORM_AVAILABLE = True
+except Exception:
+    Donation = None
+    Center = None
+    ORM_AVAILABLE = False
+
+# Попытка импортировать legacy user (у вас есть LegacyUser)
+try:
+    from core.legacy_models import LegacyUser
+except Exception:
+    try:
+        from legacy_models import LegacyUser
+    except Exception:
+        LegacyUser = None
+
+@login_required
+def donations_history(request):
+    """
+    Показать историю доноров для текущего пользователя.
+    Логика получения user_id:
+     - сначала пытаемcя найти соответствие в LegacyUser (если есть) по email и брать legacy.user_id,
+     - иначе используем request.user.id (обычный Django id).
+    Далее получаем список пожертвований (donations) JOIN centers и отдаём в шаблон.
+    """
+    # определяем какой user_id в таблице donations использовать
+    legacy_user_id = None
+    if LegacyUser and request.user and request.user.email:
+        try:
+            lu = LegacyUser.objects.filter(email__iexact=request.user.email).first()
+            if lu:
+                # в вашей legacy модели поле называется user_id (вы показывали)
+                legacy_user_id = getattr(lu, 'user_id', None)
+        except Exception:
+            legacy_user_id = None
+
+    # если legacy найден — используем его id, иначе используем django user id
+    user_id_for_query = legacy_user_id if legacy_user_id is not None else getattr(request.user, 'id', None)
+
+    donations = []
+
+    # 1) Попробуем через ORM, если модель найдена и поле names совпадают
+    if ORM_AVAILABLE:
+        try:
+            # Попробуйте изменить фильтр, если в модели поле называется по-другому (user_id / user)
+            qs = Donation.objects.filter(user_id=user_id_for_query).order_by('-donation_date')[:200]
+            # если у вас есть ForeignKey к центру: select_related('center')
+            try:
+                qs = qs.select_related('center')
+            except Exception:
+                pass
+
+            for d in qs:
+                center_name = ''
+                # если у модели есть FK center — возьмём его имя
+                if hasattr(d, 'center') and d.center:
+                    center_name = getattr(d.center, 'center_name', getattr(d.center, 'name', '') )
+                else:
+                    # возможно center_id поле
+                    if hasattr(d, 'center_id'):
+                        # попытаемся найти центр через ORM Center, если есть модель
+                        try:
+                            if Center:
+                                c = Center.objects.filter(center_id=d.center_id).first()
+                                center_name = getattr(c, 'center_name', '') if c else ''
+                        except Exception:
+                            center_name = ''
+                donations.append({
+                    'donation_id': getattr(d, 'donation_id', getattr(d, 'id', None)),
+                    'donation_date': getattr(d, 'donation_date', getattr(d, 'date', None)),
+                    'volume_ml': getattr(d, 'volume_ml', getattr(d, 'volume', None)),
+                    'confirmed': getattr(d, 'confirmed', None),
+                    'bonus_points': int(getattr(d, 'bonus_points', 0) or 0),
+                    'center_name': center_name,
+                })
+        except Exception:
+            # упал ORM — упадём в raw SQL ниже
+            donations = []
+
+    # 2) Если ORM не сработал или не дал данных — делаем raw SQL (надежно)
+    if not donations:
+        tbl_d = 'donations'
+        tbl_c = 'centers'
+        sql = f"""
+        SELECT d.donation_id, d.user_id, d.center_id, d.donation_date, d.volume_ml, d.confirmed, d.bonus_points,
+               c.center_name
+        FROM {tbl_d} d
+        LEFT JOIN {tbl_c} c ON d.center_id = c.center_id
+        WHERE d.user_id = %s
+        ORDER BY d.donation_date DESC
+        LIMIT 500;
+        """
+        with connection.cursor() as c:
+            c.execute(sql, [user_id_for_query])
+            colnames = [col[0] for col in c.description] if c.description else []
+            rows = c.fetchall()
+            for row in rows:
+                # привязываем по именам колонок для устойчивости
+                r = dict(zip(colnames, row))
+                donations.append({
+                    'donation_id': r.get('donation_id'),
+                    'donation_date': r.get('donation_date'),
+                    'volume_ml': r.get('volume_ml'),
+                    'confirmed': r.get('confirmed'),
+                    'bonus_points': int(r.get('bonus_points') or 0),
+                    'center_name': r.get('center_name') or '',
+                })
+
+    # передаём в шаблон
+    return render(request, 'history.html', {
+        'donations': donations,
+    })
+
+try:
+    from openpyxl import Workbook
+    OPENPYXL_OK = True
+except Exception:
+    OPENPYXL_OK = False
+
+# для pdf
+try:
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+    from reportlab.lib import colors
+    REPORTLAB_OK = True
+except Exception:
+    REPORTLAB_OK = False
+
+@login_required
+def export_history(request):
+    """
+    Экспорт истории донорства текущего пользователя.
+    ?format=xlsx  -> Excel
+    ?format=pdf   -> PDF
+    ?format=csv   -> CSV (fallback)
+    """
+    fmt = (request.GET.get('format') or 'xlsx').lower()
+
+    # ---------- определить user_id (как в donations_history) ----------
+    legacy_user_id = None
+    try:
+        from core.legacy_models import LegacyUser
+    except Exception:
+        try:
+            from legacy_models import LegacyUser
+        except Exception:
+            LegacyUser = None
+
+    if LegacyUser and request.user and request.user.email:
+        try:
+            lu = LegacyUser.objects.filter(email__iexact=request.user.email).first()
+            if lu:
+                legacy_user_id = getattr(lu, 'user_id', None)
+        except Exception:
+            legacy_user_id = None
+
+    user_id_for_query = legacy_user_id if legacy_user_id is not None else getattr(request.user, 'id', None)
+
+    # ---------- собрать donations через raw SQL (надёжно) ----------
+    donations = []
+    tbl_d = 'donations'
+    tbl_c = 'centers'
+    sql = f"""
+        SELECT d.donation_id, d.user_id, d.center_id, d.donation_date, d.volume_ml, d.confirmed, d.bonus_points,
+               c.center_name
+        FROM {tbl_d} d
+        LEFT JOIN {tbl_c} c ON d.center_id = c.center_id
+        WHERE d.user_id = %s
+        ORDER BY d.donation_date DESC
+        LIMIT 2000;
+    """
+    from django.db import connection
+    with connection.cursor() as c:
+        c.execute(sql, [user_id_for_query])
+        colnames = [col[0] for col in c.description] if c.description else []
+        rows = c.fetchall()
+        for row in rows:
+            r = dict(zip(colnames, row))
+            donations.append({
+                'donation_id': r.get('donation_id'),
+                'donation_date': r.get('donation_date'),
+                'volume_ml': r.get('volume_ml'),
+                'confirmed': r.get('confirmed'),
+                'bonus_points': r.get('bonus_points') or 0,
+                'center_name': r.get('center_name') or '',
+            })
+
+    # Преобразуем записи в табличный список (заголовки)
+    headers = ['ID', 'Дата', 'Центр', 'Объем (мл)', 'Статус', 'Бонус очки']
+    rows_out = []
+    for d in donations:
+        status = 'Қабылданды' if d['confirmed'] is True else ('Бас тартылды' if d['confirmed'] is False else 'Өңделуде')
+        rows_out.append([
+            d['donation_id'] or '',
+            d['donation_date'].strftime('%Y-%m-%d') if d['donation_date'] else '',
+            d['center_name'],
+            d['volume_ml'] or '',
+            status,
+            d['bonus_points'] or 0,
+        ])
+
+    # ---------------- XLSX ----------------
+    if fmt in ('xlsx', 'excel') and OPENPYXL_OK:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Donations"
+        ws.append(headers)
+        for r in rows_out:
+            ws.append(r)
+        # auto width (simple)
+        for col in ws.columns:
+            max_length = 0
+            col_letter = col[0].column_letter
+            for cell in col:
+                try:
+                    if cell.value:
+                        l = len(str(cell.value))
+                        if l > max_length: max_length = l
+                except Exception:
+                    pass
+            ws.column_dimensions[col_letter].width = min(50, max(10, max_length + 2))
+
+        bio = io.BytesIO()
+        wb.save(bio)
+        bio.seek(0)
+        resp = HttpResponse(bio.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        resp['Content-Disposition'] = 'attachment; filename="donations.xlsx"'
+        return resp
+
+    # ---------------- PDF ----------------
+    if fmt == 'pdf' and REPORTLAB_OK:
+        # регистрация шрифта DejaVu (чтобы работала кириллица)
+        try:
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.ttfonts import TTFont
+        except Exception as e:
+            # fallback: если импорт не прошёл, сообщим
+            print("ReportLab font imports failed:", e)
+        else:
+            # путь к шрифту (BASE_DIR/static/fonts/DejaVuSans.ttf)
+            FONT_PATH = os.path.join(getattr(settings, "BASE_DIR", "."), "static", "fonts", "DejaVuSans.ttf")
+            if os.path.exists(FONT_PATH):
+                try:
+                    pdfmetrics.registerFont(TTFont("DejaVu", FONT_PATH))
+                except Exception as e:
+                    # зарегистрировать не удалось — выведем в лог (PDF всё равно попытается)
+                    print("Failed to register DejaVu font:", e)
+            else:
+                print("DejaVu font not found at:", FONT_PATH)
+
+        bio = io.BytesIO()
+        # альбомная A4
+        doc = SimpleDocTemplate(bio, pagesize=landscape(A4), leftMargin=18, rightMargin=18, topMargin=18, bottomMargin=18)
+
+        data = [headers] + rows_out
+
+        # задаём ширины колонок приблизительно (можешь подогнать)
+        col_count = len(headers)
+        # равномерное распределение, пример:
+        table = Table(data, repeatRows=1)  # можно: Table(data, colWidths=[...])
+
+        # стиль: используем DejaVu если зарегистрирован, иначе оставим Helvetica
+        font_name = "DejaVu"
+        # если шрифт не зарегистрирован — проверка здесь не строгая, но TableStyle просто будет пытаться использовать его
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#EAF1FF')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            # используем DejaVu для всей таблицы (включая заголовки)
+            ('FONTNAME', (0,0), (-1,0), font_name),
+            ('FONTNAME', (0,1), (-1,-1), font_name),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+
+        # можно добавить авторазмер колонок — но reportlab требует вычислений; для начала пусть будет так
+        doc.build([table])
+        bio.seek(0)
+        resp = HttpResponse(bio.read(), content_type='application/pdf')
+        resp['Content-Disposition'] = 'attachment; filename="donations.pdf"'
+        return resp
+
+
+    # ---------------- CSV (fallback) ----------------
+    bio = io.StringIO()
+    writer = csv.writer(bio)
+    writer.writerow(headers)
+    for r in rows_out:
+        writer.writerow(r)
+    resp = HttpResponse(bio.getvalue(), content_type='text/csv; charset=utf-8')
+    resp['Content-Disposition'] = 'attachment; filename="donations.csv"'
+    return resp
 
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
