@@ -10,13 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.getenv(
-        "ALLOWED_HOSTS", "*"
-    ).split(",")
-    if h.strip()
-]
+ALLOWED_HOSTS = ["*", ".onrender.com", "localhost", "127.0.0.1"]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
