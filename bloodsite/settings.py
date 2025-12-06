@@ -41,6 +41,9 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
+    "bloodsite.middleware.NoCacheForAuthenticatedMiddleware",
+    "core.middleware.RequireMedicRoleMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     # "django.middleware.locale.LocaleMiddleware",  # если нужно
     "corsheaders.middleware.CorsMiddleware",
