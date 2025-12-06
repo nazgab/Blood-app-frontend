@@ -56,7 +56,7 @@
 
         {% if user.is_authenticated %}
           <button class="user" type="button" aria-label="Профиль" id="profileBtn">
-            <img class="avatar" src="{% static 'avatar.png' %}" alt="user">
+            <img class="avatar" src="{% static 'avatar.jfif' %}" alt="user">
             <span class="user-name" id="userNameRight">{{ user.first_name|default:user.username }}</span>
           </button>
 
