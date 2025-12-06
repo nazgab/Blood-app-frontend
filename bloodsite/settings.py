@@ -210,3 +210,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+"DEFAULT_AUTHENTICATION_CLASSES": [
+    "rest_framework.authentication.SessionAuthentication",
+],
+
